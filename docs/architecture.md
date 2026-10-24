@@ -2,6 +2,8 @@
 
 ## Documentation ownership
 
+Repository agent workflow and the release checklist live in [AGENTS.md](../AGENTS.md).
+
 - [README](../README.md): user starting point, capabilities, limits and installation.
 - [SKILL.md](../SKILL.md): agent execution boundary, authentication preflight,
   exact read-back/approval rules and interpretation of bank results.
@@ -48,6 +50,9 @@ The repository root is one installable skill. Runtime files are `SKILL.md`,
 `scripts/`, `references/`, `data/`, `config.json.example`, license and notices.
 `tools/package-skill.mjs` archives only these paths from a clean committed tree.
 Developer tools, tests and validation reports are not needed by the installed CLI.
+The custom release archive contains only the allowlisted runtime files; GitHub
+source archives and Git-based installs can contain the full tagged repository.
+Pushing `main` does not change a previously published tag or release asset.
 
 External config, credentials, keys and state survive skill upgrades. `.local/`,
 raw eval results and `dist/` are ignored; never commit bank data or secrets.

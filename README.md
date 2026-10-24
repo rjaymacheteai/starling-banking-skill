@@ -86,5 +86,7 @@ For Codex, Claude Code, OpenClaw or another Agent Skills host, add this reposito
 through the host's skill installation flow, or place the extracted skill release
 in its configured skills directory. The repository root is the skill; its name is
 `starling-banking`. [Releases](https://github.com/rjaymacheteai/starling-banking-skill/releases)
-include a skill-only archive and checksum. No npm dependencies are required.
+include a custom skill-only archive and checksum; use that asset for a minimal
+manual install. Git installs and GitHub’s automatic source archives may include
+the full tagged repository. No npm dependencies are required.
 Credentials must be available to the actual execution environment, including any cloud or sandbox host.
