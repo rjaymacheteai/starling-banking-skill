@@ -73,9 +73,9 @@ Starling app approval is separate. Uncertain submissions are never automatically
 | Maintainer: architecture and developer checks | [Architecture](docs/architecture.md) |
 | Reviewer: checks performed and their limits | [Validation](docs/validation.md) |
 
-Recorded validation includes 135 deterministic tests, four sandbox customers and a
-live app-approved 1p payment with one settled debit. The light model eval was blocked
-by a usage limit; it is not a passed behavioural evaluation. Not every catalogue
+Current validation includes 139 deterministic tests and 17/17 selected lightweight
+OpenAI agent smoke checks (low reasoning). Earlier bank validation covered four
+sandbox customers and a live app-approved 1p payment with one settled debit. Not every catalogue
 operation or agent host has been validated. See the evidence linked above.
 
 Security reports: [SECURITY.md](SECURITY.md). Attribution: [third-party notices](THIRD_PARTY_NOTICES.md).

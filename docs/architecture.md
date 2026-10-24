@@ -62,7 +62,7 @@ See [configuration](../references/configuration.md) for path selection.
 
 - `npm test`: deterministic fake-bank tests; no models or real banking.
 - `npm run eval:list`: inspect agent cases without running models.
-- `npm run eval`: billed, four core Haiku cases at low effort by default; see
+- `npm run eval`: billed, four core Codex Luna cases at low effort by default; see
   [eval instructions](../tools/eval/README.md). Never runs in CI.
 - `npm run test:live`: explicitly requested read-only live checks.
 - `npm run setup:sandbox -- all --clipboard` / `npm run test:sandbox`: developer

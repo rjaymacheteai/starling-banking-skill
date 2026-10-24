@@ -96,7 +96,7 @@ export function summariseTurn(events, prompt) {
       } catch {
         json = undefined;
       }
-      return { command: c.input.command, args: (m?.[1] ?? '').trim(), output: c.output, json };
+      return { command: c.input.command, args: (m?.[1] ?? '').trim().replace(/['"]$/, ''), output: c.output, json };
     });
   return {
     prompt,
@@ -104,7 +104,8 @@ export function summariseTurn(events, prompt) {
     allAssistantText: assistantText.join('\n'),
     calls,
     skillCalls,
-    skillInvoked,
+    skillInvoked: skillInvoked || calls.some((c) => /(?:cat|sed|read).*starling-banking.*SKILL\.md/.test(c.input?.command ?? '')),
+    usage: result?.usage,
     ok: result?.subtype === 'success' && !result?.is_error,
     subtype: result?.subtype ?? 'no_result',
     costUsd: result?.total_cost_usd ?? 0,

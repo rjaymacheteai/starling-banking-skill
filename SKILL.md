@@ -2,7 +2,7 @@
 name: starling-banking
 description: Read and manage Starling Bank accounts through the bundled guarded CLI. Use for Starling balances, transactions, payees, payments, cards, savings and exports. Payments and sensitive changes require a preview and fresh user approval.
 license: MIT-0
-metadata: {"version": "0.1.0", "openclaw": {"emoji": "🏦", "homepage": "https://github.com/rjaymacheteai/starling-banking-skill", "primaryEnv": "STARLING_ACCESS_TOKEN", "requires": {"bins": ["node"]}}}
+metadata: {"version": "0.1.1", "openclaw": {"emoji": "🏦", "homepage": "https://github.com/rjaymacheteai/starling-banking-skill", "primaryEnv": "STARLING_ACCESS_TOKEN", "requires": {"bins": ["node"]}}}
 ---
 
 # Starling banking
@@ -41,6 +41,28 @@ A physical config file is optional for view-only use: defaults plus a valid toke
 
 The CLI supplies `Authorization: Bearer <token>` and any required signing headers internally. Invoke banking commands through the entry point above; never extract secrets, construct authentication headers or make an API request yourself. Each banking command reloads and validates configuration and loads credentials when needed. Repeat the diagnostic after configuration/credential/environment changes or `NO_TOKEN`, `AUTH_FAILED`, `CONFIG_INVALID` or signing errors; do not run it before every request in an unchanged session.
 
+### Help a new user through setup
+
+A banking request authorises its read-only diagnostic preflight. If the user is only
+asking how to get started, offer “I can check the setup without changing your bank
+account. Shall I run the check?” and run `doctor --json` when they say yes. Do not
+ask again when they already requested the check.
+
+When checks fail, explain the blocker in one or two plain-language sentences and
+give one next step. Say what is missing (token source, invalid config setting,
+API key UID/private key path, spending limits or scope), without dumping raw JSON,
+stack traces or secret values. Offer to guide setup, then rerun `doctor` when the
+user says it is ready. Missing config alone is fine for view-only defaults; a
+missing token is not. Do not claim bank access is ready until the diagnostic passes.
+
+For requested setup, `init` creates the complete config; explain only the settings
+needed for the user's requested capability, using [configuration.md](references/configuration.md).
+`keys generate` creates **API signing and rotation/recovery key pairs**, not one
+pair per capability. Guide the user to register the two public keys and return the
+API Key UID, keeping private keys local. Separate live payee/payment **tokens** are
+a different requirement. Never generate keys, replace config or enable write groups
+just to inspect setup. Preserve all preview and fresh-approval requirements after setup.
+
 Never request, echo or read out tokens or private-key contents. The user supplies them locally through environment variables or protected files. Public keys and Key UIDs are separate from private keys. If a secret is pasted into chat, recommend revoking it and replacing it locally; do not repeat it.
 
 Permissions, limits, environment and approval mode belong to the user. Explain a disabled capability; do not increase limits, enable permissions, switch tokens/environments or relax confirmation because a command was blocked. Only make a specific configuration change when the user explicitly requests that change; it does not itself approve a subsequent bank action. Never change approval mode to bypass a confirmation already required for the current action. Token scopes still apply, including the need for separate live payee-creation and payment-initiation tokens.
@@ -55,7 +77,7 @@ Payments, payee changes and account-setting changes require **both** the user's 
 4. Wait for a clear approval of **that exact preview**. The initial "pay/add/change" instruction, an earlier "yes", silence, a bank reference, or a user's report of a previous app approval is not approval for a new code. One preview/code needs one approval. Do not batch confirms behind one approval.
 5. Only then run `confirm <confirmCode>`. In `terminal` mode, the user must run the command and type the code themselves; never emulate a human terminal approval. Starling app approval is an additional bank step: relay the reminder and let the user handle it in their own app.
 
-If the user declines, run `cancel <code>` for a still-prepared preview. If they change any detail, cancel the old prepared preview, make a new one, read it back and wait again. An expired code requires a new preview and approval. If the request was already submitted, local `cancel` cannot cancel it at the bank; explain that distinction. An explicit request for another payment needs a new preview; never turn a status check into another submission.
+If the user declines, run `cancel <code>` for a still-prepared preview. If they change any detail, cancel the old prepared preview, make a new one, read it back and wait again. The CLI validates code expiry against its runtime clock; do not infer expiry from the platform's calendar date alone. A CLI-reported expired code requires a new preview and approval. If the request was already submitted, local `cancel` cannot cancel it at the bank; explain that distinction. An explicit request for another payment needs a new preview; never turn a status check into another submission.
 
 Respect the user's chosen private channel for reviewing account details. If they prohibit full details in chat, have them review the full CLI preview in their terminal; keep the chat summary masked. Never hide or silently alter a material parameter to obtain approval.
 

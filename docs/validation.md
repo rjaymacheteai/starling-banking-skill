@@ -1,5 +1,23 @@
 # Validation recorded in this repository
 
+## v0.1.1 — 25 October 2026
+
+| Check | Result |
+|---|---|
+| Deterministic Node tests | **139 passed**, zero failures; fake bank only |
+| Skill-format validator and documentation links | Passed |
+| Lightweight OpenAI agent smoke checks | **17/17 selected model/case runs, 200/200 required checks**; two Luna models, low reasoning, one pass |
+| New-user workflow | Offers diagnostic, runs it after approval, explains missing token and safe local setup; no unrequested config/key creation |
+| Real banking / agent-host installation | Not performed for this release |
+
+See [agent evaluation](agent-eval-validation.md) for exact cases, grader corrections,
+usage, evidence hash and limitations. Runtime changes are the version label;
+agent instructions add authentication preflight and guided onboarding. Documentation
+and the developer eval harness were reorganised/extended. Prior sandbox/live evidence
+below is historical and does not imply every endpoint or production account type is validated.
+
+## v0.1.0 — historical evidence
+
 Release: **v0.1.0**, 24 October 2026. These are recorded checks and their limits,
 not a claim that every API operation, model or agent host is validated.
 

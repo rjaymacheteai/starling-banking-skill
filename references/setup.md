@@ -3,6 +3,15 @@
 Requires Node.js 18+. In this guide, `starling-banking` means
 `node "<skill-directory>/scripts/starling-banking.mjs"`. No npm install is needed.
 
+## First use with an agent
+
+Ask “Check my Starling setup.” The agent runs `doctor`, explains any missing setup
+in plain language, and guides one step at a time. Ask it to initialise config or
+generate signing keys when you need those; it should not overwrite existing files.
+Once you supply credentials locally, say “Ready, check again.” No payment is needed
+to check setup. The two signing pairs are API + rotation/recovery; separate
+payee/payment tokens are a separate scope requirement.
+
 ## Read-only access
 
 1. Link your account on the [Starling developer portal](https://developer.starlingbank.com)

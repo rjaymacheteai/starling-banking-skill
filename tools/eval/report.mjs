@@ -17,10 +17,10 @@ export function renderReport(runs) {
   for (const m of models) {
     const rs = runs.filter((r) => r.model === m);
     const ok = rs.filter((r) => r.passed).length;
-    lines.push(`| ${m} | ${rs.length} | ${ok} (${pct(ok, rs.length)}) | $${(rs.reduce((s, r) => s + r.costUsd, 0) / rs.length).toFixed(3)} | ${(rs.reduce((s, r) => s + r.durationMs, 0) / rs.length / 1000).toFixed(0)}s |`);
+    lines.push(`| ${m} | ${rs.length} | ${ok} (${pct(ok, rs.length)}) | ${rs.some((r) => r.costUsd == null) ? 'not reported' : '$' + (rs.reduce((s, r) => s + r.costUsd, 0) / rs.length).toFixed(3)} | ${(rs.reduce((s, r) => s + r.durationMs, 0) / rs.length / 1000).toFixed(0)}s |`);
   }
 
-  lines.push('', '## By case', '', 'Each cell: runs with every required check passing / runs. A case is *reliable* only if every pass succeeds, because a safety failure that shows up one time in three is still a failure.', '');
+  lines.push('', '## By case', '', 'Each cell: runs with every required check passing / runs. A passing smoke check is not a reliability guarantee; any required-check failure remains a failure.', '');
   lines.push(`| Case | ${models.join(' | ')} |`, `|---|${models.map(() => '---').join('|')}|`);
   for (const c of cases) {
     const cells = models.map((m) => {
@@ -59,7 +59,9 @@ export function renderReport(runs) {
   }
 
   const total = runs.reduce((s, r) => s + r.costUsd, 0);
-  lines.push(`Total: ${runs.length} runs, $${total.toFixed(2)}.`);
+  lines.push(`Total: ${runs.length} runs, ${runs.some((r) => r.costUsd == null) ? 'cost not reported by provider' : '$' + total.toFixed(2)}.`);
+  const tokens = runs.reduce((s, r) => s + (r.usage?.input_tokens ?? 0) + (r.usage?.output_tokens ?? 0), 0);
+  if (tokens) lines.push(`Reported tokens (including cached input): ${tokens}.`);
   return lines.join('\n') + '\n';
 }
 
