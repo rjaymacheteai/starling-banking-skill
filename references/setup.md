@@ -1,55 +1,62 @@
-# Setup guide (for the user)
+# Setup
 
-About 10 minutes for read-only use; add 10 more for payments. At any point, `starling-banking doctor` tells you what is left.
+Requires Node.js 18+. In this guide, `starling-banking` means
+`node "<skill-directory>/scripts/starling-banking.mjs"`. No npm install is needed.
 
-You need Node.js 18 or newer (`node --version`). Get it from https://nodejs.org if not.
+## Read-only access
 
-## 1. Read-only: balances and transactions
-
-1. Sign in at https://developer.starlingbank.com and link your Starling account (Personal Access page). One developer account links to one Starling account; a business or joint account needs its own developer account and token.
-2. Create a **personal access token**. For read-only use tick these scopes: `account:read`, `balance:read`, `transaction:read`, `payee:read`, `account-identifier:read`, `card:read`, `savings-goal:read`, `mandate:read`, `pay-local:read`, `payee-transaction:read`. (Fewer is fine; commands that need a missing scope tell you which.)
-3. Put the token in your shell, **not in the chat**:
+1. Link your account on the [Starling developer portal](https://developer.starlingbank.com)
+   and create a personal access token. Start with the read scopes for the commands
+   you need; see [permissions](permissions.md). `account:read`, `balance:read` and
+   `transaction:read` cover basic account/balance/transaction reads.
+2. Supply the token locally, never in chat. For a temporary Bash/Zsh session:
+   ```sh
+   printf 'Starling access token: '
+   IFS= read -r -s STARLING_ACCESS_TOKEN
+   printf '\n'
+   export STARLING_ACCESS_TOKEN
    ```
-   export STARLING_ACCESS_TOKEN='paste-token-here'
-   ```
-   Add that line to `~/.zshrc` or `~/.bashrc` to keep it. OpenClaw users can instead set it under `skills.entries.starling-banking.apiKey` in `~/.openclaw/openclaw.json`.
-4. Run `starling-banking doctor`. Fix anything marked ✗.
+   The hidden prompt keeps the token out of command text and shell history. The
+   CLI must inherit this variable. For persistent use, create an owner-only token
+   file (`chmod 600`) and configure `auth.tokenFile`. A hosted agent can use its
+   secret settings if they inject the token into the actual execution environment.
+3. Run `starling-banking doctor --json`. Require exit code 0 and `data.ok: true`;
+   review warnings and confirm the live/sandbox environment and intended account.
+   The diagnostic makes read-only API calls and checks configured signing locally.
 
-That's it: the skill is read-only until you say otherwise.
+A config file is optional for view-only use. To customise settings, run
+`starling-banking init`, edit the generated external file, then run `doctor` again.
+See [configuration](configuration.md) for every setting and path override.
 
-## 2. Turning on more (optional)
+## Enable payments or payee registration
 
-```
-starling-banking init
-```
+1. Enable only the required groups in your config. `payments` sends to registered
+   recipients; `payees` registers or edits them. They are separate permissions.
+2. Create tokens with the necessary [scopes](permissions.md). A live personal token
+   cannot combine `payee:create` with `pay-local:create` or `standing-order:create`.
+   Use separate payee/payment tokens and explicitly select the appropriate source
+   in your config; the CLI never switches tokens automatically. Payment workflows
+   need account/payee reads and `pay-local:create`; add `pay-local:read` and
+   `transaction:read` for status and verification.
+3. For payments, run `starling-banking keys generate`. Register both generated
+   **public** keys in Starling's Personal Access → Keys page (API first, rotation
+   second). Keep both private keys local and back up the rotation key. Set
+   `signing.keyUid` to the API key UID shown by Starling and `signing.keyFile` to
+   its private key path. A public key UID is different from an application client ID.
+4. Set low positive `limits.perPayment` and `limits.perDay`; optionally restrict
+   `allowedPayees`. Run `doctor --json` again. Its local signing test does not prove
+   that Starling has registered the matching public key.
 
-creates `~/.config/starling-banking/config.json` (Windows: `%APPDATA%\starling-banking`) from `config.json.example`. Every setting is explained in the comments. Add groups to `"permissions"`, for example `["view", "organise", "card-controls"]`. Run `doctor` again after any change. If your token lacks scopes for a group you switched on, `doctor` says which.
+The agent must preview the exact payment/payee change and obtain fresh approval
+before confirming. Starling may additionally require approval in its app. See
+[commands](commands.md) for syntax and [troubleshooting](troubleshooting.md) for errors.
 
-Your config lives outside the skill folder so updates never overwrite it.
+## Sandbox and credential maintenance
 
-## 3. Payments (optional, takes extra care)
+Use `environment: "sandbox"` with simulator credentials for fake money. Separate
+configs/runtime directories keep different holders or live/sandbox state apart.
+Run `doctor` after changing configuration, credentials or environment.
 
-1. Create a **second token** for payments, with `payee:read`, `account:read`, `pay-local:create` and `pay-local:read`. Starling rejects combining `payee:create` with payment-initiation scopes (`pay-local:create` or `standing-order:create`). To register payees, use a **separate payee token** with `payee:create` and `payee:read`, excluding those payment-initiation scopes. Select the appropriate token through `auth.tokenFile` or `auth.tokenEnv` for each workflow; the CLI does not switch tokens automatically. Your everyday read-only token can remain separate from both.
-2. Create signing keys, which Starling requires for payments:
-   ```
-   starling-banking keys generate
-   ```
-   Upload **both public keys** in the developer portal (Personal Access → Keys): the `api` key first, then the `rotation` key. Copy the **Key Uid** Starling shows for the API key. Keep the private keys private, and back up the rotation private key.
-3. In `config.json`:
-   ```jsonc
-   "permissions": ["view", "payments"],
-   "signing": { "keyUid": "<Key Uid from the portal>", "keyFile": "~/.config/starling-banking/keys/starling-api-private.key" },
-   "limits": { "currency": "GBP", "perPayment": 25, "perDay": 100 }
-   ```
-   Start with low limits. Optionally set `"allowedPayees": ["Alex Smith"]`.
-4. Set `STARLING_ACCESS_TOKEN` (or `auth.tokenFile`, if configured) to the payments token and run `doctor`. Test with a very small payment (£0.01) to a payee you control, and approve the live payment request in the Starling app.
-
-## Sandbox
-
-Set `"environment": "sandbox"` and use a sandbox token from the developer portal's simulator. Sandbox uses fake data and fake money.
-
-## Keeping secrets safe
-
-- Never paste a token or private key into a chat. If you did, revoke it in the portal and make a new one.
-- Keep key files readable only by you (`chmod 600`). `doctor` warns if they are not.
-- Anyone who has a token with payment scopes **and** your signing key can move money. Treat them like your banking password.
+Keep token and private-key files owner-only (`chmod 600`). Never share their contents
+with the agent. If exposed, revoke and replace them locally. Token refresh is not
+automated; supply a replacement through the same protected source when needed.

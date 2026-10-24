@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parseArgs } from '../scripts/lib/args.mjs';
 import { loadCatalogue, scopesSatisfied } from '../scripts/lib/catalogue.mjs';
-import { GROUP_NAMES, GROUPS, validateConfig } from '../scripts/lib/config.mjs';
+import { DEFAULTS, GROUP_NAMES, GROUPS, validateConfig } from '../scripts/lib/config.mjs';
 import { parseJsonc } from '../scripts/lib/jsonc.mjs';
 import { formatMoney, parseAmount } from '../scripts/lib/money.mjs';
 import { clearSecrets, redact, registerSecret } from '../scripts/lib/redact.mjs';
@@ -37,12 +37,9 @@ test('the shipped config.json.example parses and validates with no errors', () =
   assert.deepEqual(config.permissions, ['view']);
 });
 
-test('every permission group and setting named in config.json.example is documented there', () => {
-  const text = readFileSync(EXAMPLE, 'utf8');
-  for (const g of GROUP_NAMES) assert.ok(text.includes(`"${g}"`), `group ${g} is not described in config.json.example`);
-  for (const key of ['environment', 'permissions', 'tokenEnv', 'tokenFile', 'keyUid', 'keyFile', 'algorithm', 'defaultAccountUid', 'perPayment', 'perDay', 'allowedPayees', 'mode', 'expiresMinutes']) {
-    assert.ok(text.includes(`"${key}"`), `setting ${key} is missing from config.json.example`);
-  }
+test('the shipped example preserves view-only runtime defaults', () => {
+  const example = parseJsonc(readFileSync(EXAMPLE, 'utf8'));
+  assert.deepEqual(example, DEFAULTS);
 });
 
 test('config validation gives plain-English errors and always keeps "view" on', () => {
