@@ -1,0 +1,26 @@
+{
+  "name": "starling-banking-skill",
+  "version": "0.1.0",
+  "description": "Unofficial Agent Skill for working with a Starling Bank account through Starling's official API",
+  "private": true,
+  "license": "MIT-0",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "pack:skill": "node tools/package-skill.mjs",
+    "test:live": "bash tools/live-check.sh",
+    "test:payee": "node tools/live-action.mjs register",
+    "test:payee-update": "node tools/live-action.mjs update",
+    "test:payment": "node tools/live-action.mjs payment",
+    "test:payment-pending": "node tools/live-action.mjs payment-pending",
+    "test:payment-reject": "node tools/live-action.mjs payment-reject",
+    "setup:sandbox": "bash tools/sandbox-setup.sh",
+    "check:sandbox": "node tools/sandbox.mjs check",
+    "test:sandbox": "node tools/sandbox-suite.mjs",
+    "eval": "node tools/eval/run.mjs",
+    "eval:list": "node tools/eval/run.mjs --list",
+    "catalogue": "node tools/build-catalogue.mjs"
+  }
+}

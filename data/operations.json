@@ -1,0 +1,2080 @@
+{
+  "source": "https://api.starlingbank.com/api/openapi.json",
+  "generatedBy": "tools/build-catalogue.mjs",
+  "count": 87,
+  "operations": [
+    {
+      "operationId": "getAccountHolder",
+      "method": "GET",
+      "path": "/api/v2/account-holder",
+      "tag": "Account Holders",
+      "summary": "Get basic information about the account holder",
+      "scopes": [
+        "customer:read",
+        "account-holder-type:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "deleteProfileImage",
+      "method": "DELETE",
+      "path": "/api/v2/account-holder/{accountHolderUid}/profile-image",
+      "tag": "Profile images",
+      "summary": "Delete a profile image if one exists",
+      "scopes": [
+        "profile-image:edit"
+      ],
+      "group": "organise",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountHolderUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "downloadProfileImage",
+      "method": "GET",
+      "path": "/api/v2/account-holder/{accountHolderUid}/profile-image",
+      "tag": "Profile images",
+      "summary": "Get a profile image if one exists",
+      "scopes": [
+        "profile-image:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountHolderUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "binary"
+    },
+    {
+      "operationId": "updateProfileImage",
+      "method": "PUT",
+      "path": "/api/v2/account-holder/{accountHolderUid}/profile-image",
+      "tag": "Profile images",
+      "summary": "Update a profile image if one already exists",
+      "scopes": [
+        "profile-image:edit"
+      ],
+      "group": "organise",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountHolderUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "image/*",
+        "required": [],
+        "fields": []
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "getBusiness",
+      "method": "GET",
+      "path": "/api/v2/account-holder/business",
+      "tag": "Businesses",
+      "summary": "Get a business account holder's details",
+      "scopes": [
+        "account:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getCorrespondenceAddress",
+      "method": "GET",
+      "path": "/api/v2/account-holder/business/correspondence-address",
+      "tag": "Businesses",
+      "summary": "Get a company's correspondence address",
+      "scopes": [
+        "address:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getRegisteredAddress",
+      "method": "GET",
+      "path": "/api/v2/account-holder/business/registered-address",
+      "tag": "Businesses",
+      "summary": "Get a company's registered address",
+      "scopes": [
+        "address:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getIndividual",
+      "method": "GET",
+      "path": "/api/v2/account-holder/individual",
+      "tag": "Individuals and Sole Traders",
+      "summary": "Get an individual account holder's details",
+      "scopes": [
+        "customer:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "updateEmail",
+      "method": "PUT",
+      "path": "/api/v2/account-holder/individual/email",
+      "tag": "Individuals and Sole Traders",
+      "summary": "Update an individual account holder's email address",
+      "scopes": [
+        "email:edit"
+      ],
+      "group": "account-settings",
+      "signed": true,
+      "confirm": true,
+      "pathParams": [],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "email"
+        ],
+        "fields": [
+          "email"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "getJointAccount",
+      "method": "GET",
+      "path": "/api/v2/account-holder/joint",
+      "tag": "Joint Accounts",
+      "summary": "Get a joint account holder's details",
+      "scopes": [
+        "customer:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getAccountHolderName",
+      "method": "GET",
+      "path": "/api/v2/account-holder/name",
+      "tag": "Account Holders",
+      "summary": "Get the name of the account holder",
+      "scopes": [
+        "account-holder-name:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getSoleTrader",
+      "method": "GET",
+      "path": "/api/v2/account-holder/sole-trader",
+      "tag": "Sole Traders",
+      "summary": "Get sole trader business details",
+      "scopes": [
+        "account:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getSavingsGoals",
+      "method": "GET",
+      "path": "/api/v2/account/{accountUid}/savings-goals",
+      "tag": "Savings Goals",
+      "summary": "Get all savings goals",
+      "scopes": [
+        "savings-goal:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "createSavingsGoal",
+      "method": "PUT",
+      "path": "/api/v2/account/{accountUid}/savings-goals",
+      "tag": "Savings Goals",
+      "summary": "Create a savings goal",
+      "scopes": [
+        "savings-goal:create"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "currency",
+          "name"
+        ],
+        "fields": [
+          "name",
+          "currency",
+          "target",
+          "base64EncodedPhoto"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "deleteSavingsGoal",
+      "method": "DELETE",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}",
+      "tag": "Savings Goals",
+      "summary": "Delete a savings goal",
+      "scopes": [
+        "savings-goal:delete"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "getSavingsGoal",
+      "method": "GET",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}",
+      "tag": "Savings Goals",
+      "summary": "Get a savings goal",
+      "scopes": [
+        "savings-goal:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "updateSavingsGoal",
+      "method": "PUT",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}",
+      "tag": "Savings Goals",
+      "summary": "Update an existing goal",
+      "scopes": [
+        "savings-goal:create"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "currency",
+          "name"
+        ],
+        "fields": [
+          "name",
+          "currency",
+          "target",
+          "base64EncodedPhoto"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "addMoney",
+      "method": "PUT",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}/add-money/{transferUid}",
+      "tag": "Savings Goals",
+      "summary": "Add money into a savings goal",
+      "scopes": [
+        "savings-goal-transfer:create"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid",
+        "transferUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "amount"
+        ],
+        "fields": [
+          "amount",
+          "reference"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "getSavingsGoalPhoto",
+      "method": "GET",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}/photo",
+      "tag": "Savings Goals",
+      "summary": "Get the photo associated with a savings goal",
+      "scopes": [
+        "savings-goal:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "deleteRecurringTransfer",
+      "method": "DELETE",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}/recurring-transfer",
+      "tag": "Savings Goals",
+      "summary": "Delete the recurring transfer of a savings goal",
+      "scopes": [
+        "savings-goal-transfer:delete"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "getRecurringTransfer",
+      "method": "GET",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}/recurring-transfer",
+      "tag": "Savings Goals",
+      "summary": "Get the recurring transfer of a savings goal",
+      "scopes": [
+        "savings-goal-transfer:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "createOrUpdateRecurringTransfer",
+      "method": "PUT",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}/recurring-transfer",
+      "tag": "Savings Goals",
+      "summary": "Create a recurring transfer into a savings goal",
+      "scopes": [
+        "savings-goal-transfer:create"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "amount",
+          "recurrenceRule"
+        ],
+        "fields": [
+          "recurrenceRule",
+          "amount",
+          "topUp",
+          "reference"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "withdrawMoney",
+      "method": "PUT",
+      "path": "/api/v2/account/{accountUid}/savings-goals/{savingsGoalUid}/withdraw-money/{transferUid}",
+      "tag": "Savings Goals",
+      "summary": "Withdraw money from a savings goal",
+      "scopes": [
+        "savings-goal-transfer:create"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "savingsGoalUid",
+        "transferUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "amount"
+        ],
+        "fields": [
+          "amount",
+          "reference"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "getSpaces",
+      "method": "GET",
+      "path": "/api/v2/account/{accountUid}/spaces",
+      "tag": "Spaces",
+      "summary": "Get all active savings and spending spaces",
+      "scopes": [
+        "space:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getSpacePhoto",
+      "method": "GET",
+      "path": "/api/v2/account/{accountUid}/spaces/{spaceUid}/photo",
+      "tag": "Spaces",
+      "summary": "Get the photo associated with a space",
+      "scopes": [
+        "space:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "spaceUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getSpendingSpace",
+      "method": "GET",
+      "path": "/api/v2/account/{accountUid}/spaces/spending/{spaceUid}",
+      "tag": "Spaces",
+      "summary": "Get a spending space",
+      "scopes": [
+        "space:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "spaceUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getAccounts",
+      "method": "GET",
+      "path": "/api/v2/accounts",
+      "tag": "Accounts",
+      "summary": "Get the accounts associated with an account holder",
+      "scopes": [
+        "account:read",
+        "account-list:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getAccountBalance",
+      "method": "GET",
+      "path": "/api/v2/accounts/{accountUid}/balance",
+      "tag": "Accounts",
+      "summary": "Get an account's balance",
+      "scopes": [
+        "balance:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getConfirmationOfFunds",
+      "method": "GET",
+      "path": "/api/v2/accounts/{accountUid}/confirmation-of-funds",
+      "tag": "Accounts",
+      "summary": "Get whether there are available funds for a requested amount",
+      "scopes": [
+        "confirmation-of-funds:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [
+        {
+          "name": "targetAmountInMinorUnits",
+          "required": true,
+          "type": "integer",
+          "format": "int64"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "downloadCSVFeedExportForDateRange",
+      "method": "GET",
+      "path": "/api/v2/accounts/{accountUid}/feed-export",
+      "tag": "Accounts",
+      "summary": "Download a Feed Export for a given date range",
+      "scopes": [
+        "feed-export-csv:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [
+        {
+          "name": "start",
+          "required": true,
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "name": "end",
+          "required": false,
+          "type": "string",
+          "format": "date"
+        }
+      ],
+      "body": null,
+      "response": "csv"
+    },
+    {
+      "operationId": "getAccountIdentifiers",
+      "method": "GET",
+      "path": "/api/v2/accounts/{accountUid}/identifiers",
+      "tag": "Accounts",
+      "summary": "Get an account's bank identifiers",
+      "scopes": [
+        "account-identifier:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getAddresses",
+      "method": "GET",
+      "path": "/api/v2/addresses",
+      "tag": "Addresses",
+      "summary": "Get the account holder's addresses",
+      "scopes": [
+        "address:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "updateCurrentAddress",
+      "method": "POST",
+      "path": "/api/v2/addresses",
+      "tag": "Addresses",
+      "summary": "Update the account holder's current address",
+      "scopes": [
+        "address:edit"
+      ],
+      "group": "account-settings",
+      "signed": true,
+      "confirm": true,
+      "pathParams": [],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "countryCode",
+          "from",
+          "line1",
+          "postCode",
+          "postTown"
+        ],
+        "fields": [
+          "line1",
+          "line2",
+          "line3",
+          "postTown",
+          "postCode",
+          "countryCode",
+          "udprn",
+          "umprn",
+          "from"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "listCards",
+      "method": "GET",
+      "path": "/api/v2/cards",
+      "tag": "Cards",
+      "summary": "Get all the cards for an account holder",
+      "scopes": [
+        "card:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "enableAtm",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/atm-enabled",
+      "tag": "Cards",
+      "summary": "Update ATM withdrawal control",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "enabled"
+        ],
+        "fields": [
+          "enabled"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "enableCurrencySwitch",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/currency-switch",
+      "tag": "Cards",
+      "summary": "Update currency switch payments control",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "currency",
+          "enabled"
+        ],
+        "fields": [
+          "enabled",
+          "currency"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "enableCard",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/enabled",
+      "tag": "Cards",
+      "summary": "Update card lock",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "enabled"
+        ],
+        "fields": [
+          "enabled"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "enableGamblingPayments",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/gambling-enabled",
+      "tag": "Cards",
+      "summary": "Update gambling payments control",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "enabled"
+        ],
+        "fields": [
+          "enabled"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "enableMagStripePayment",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/mag-stripe-enabled",
+      "tag": "Cards",
+      "summary": "Update magstripe payments control",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "enabled"
+        ],
+        "fields": [
+          "enabled"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "enableMobileWallet",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/mobile-wallet-enabled",
+      "tag": "Cards",
+      "summary": "Update mobile wallet payments control",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "enabled"
+        ],
+        "fields": [
+          "enabled"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "enableOnlinePayments",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/online-enabled",
+      "tag": "Cards",
+      "summary": "Update online payments control",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "enabled"
+        ],
+        "fields": [
+          "enabled"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "enablePos",
+      "method": "PUT",
+      "path": "/api/v2/cards/{cardUid}/controls/pos-enabled",
+      "tag": "Cards",
+      "summary": "Update card present payments (contactless and chip and pin) control",
+      "scopes": [
+        "card-control:edit"
+      ],
+      "group": "card-controls",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "cardUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "enabled"
+        ],
+        "fields": [
+          "enabled"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "listMandates",
+      "method": "GET",
+      "path": "/api/v2/direct-debit/mandates",
+      "tag": "Direct Debit Mandates",
+      "summary": "Get a list of direct debit mandates",
+      "scopes": [
+        "mandate:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "cancelMandate",
+      "method": "DELETE",
+      "path": "/api/v2/direct-debit/mandates/{mandateUid}",
+      "tag": "Direct Debit Mandates",
+      "summary": "Cancel the direct debit mandate with the specified identifier",
+      "scopes": [
+        "mandate:delete"
+      ],
+      "group": "account-settings",
+      "signed": false,
+      "confirm": true,
+      "pathParams": [
+        "mandateUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "getMandate",
+      "method": "GET",
+      "path": "/api/v2/direct-debit/mandates/{mandateUid}",
+      "tag": "Direct Debit Mandates",
+      "summary": "Get the direct debit mandate with the specified identifier",
+      "scopes": [
+        "mandate:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "mandateUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "listPaymentsForMandate",
+      "method": "GET",
+      "path": "/api/v2/direct-debit/mandates/{mandateUid}/payments",
+      "tag": "Direct Debit Mandates",
+      "summary": "Get a transaction history for a direct debit",
+      "scopes": [
+        "mandate:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "mandateUid"
+      ],
+      "queryParams": [
+        {
+          "name": "since",
+          "required": true,
+          "type": "string",
+          "format": "date"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "listMandatesForAccount",
+      "method": "GET",
+      "path": "/api/v2/direct-debit/mandates/account/{accountUid}",
+      "tag": "Direct Debit Mandates",
+      "summary": "Get a list of direct debit mandates",
+      "scopes": [
+        "mandate:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "queryFeedItems",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}",
+      "tag": "Transaction Feed",
+      "summary": "Get the account holder's feed items which were created or updated since a given date",
+      "scopes": [
+        "transaction:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid"
+      ],
+      "queryParams": [
+        {
+          "name": "changesSince",
+          "required": true,
+          "type": "string",
+          "format": "date-time"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getFeedItem",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}",
+      "tag": "Transaction Feed",
+      "summary": "Fetches a single feed item",
+      "scopes": [
+        "transaction:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getFeedItemAttachments",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/attachments",
+      "tag": "Transaction Feed",
+      "summary": "Fetches the list of items attached to a feed item",
+      "scopes": [
+        "attachment:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "attachToFeedItem",
+      "method": "POST",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/attachments",
+      "tag": "Transaction Feed",
+      "summary": "Uploads an attachment to a feed item",
+      "scopes": [
+        "attachment:write"
+      ],
+      "group": "organise",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "*/*",
+        "required": [],
+        "fields": []
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "downloadFeedItemAttachment",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/attachments/{feedItemAttachmentUid}",
+      "tag": "Transaction Feed",
+      "summary": "Downloads the feed item attachment",
+      "scopes": [
+        "attachment:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid",
+        "feedItemAttachmentUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "binary"
+    },
+    {
+      "operationId": "getMastercardFeedItem",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/mastercard",
+      "tag": "Transaction Feed",
+      "summary": "Fetches additional details about the Mastercard Feed Item",
+      "scopes": [
+        "transaction:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getReceipt",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/receipt",
+      "tag": "Transaction Feed",
+      "summary": "Fetches the receipt, created by the registered application, for a given feed item",
+      "scopes": [
+        "receipt:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "createOrUpdateReceipt",
+      "method": "PUT",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/receipt",
+      "tag": "Transaction Feed",
+      "summary": "Submit a receipt for a feed item",
+      "scopes": [
+        "receipt:write",
+        "metadata:create",
+        "metadata:edit"
+      ],
+      "group": "organise",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "items",
+          "metadataSource",
+          "paymentMethods",
+          "receiptIdentifier",
+          "receiptMerchant",
+          "totalAmount"
+        ],
+        "fields": [
+          "receiptUid",
+          "feedItemUid",
+          "metadataSource",
+          "receiptIdentifier",
+          "totalAmount",
+          "receiptMerchant",
+          "currencyCode",
+          "items",
+          "notes",
+          "taxDetails",
+          "paymentMethods",
+          "providerName"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "getReceipts",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/receipts",
+      "tag": "Transaction Feed",
+      "summary": "Fetches all receipts for a given feed item",
+      "scopes": [
+        "receipts:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "changeTransactionCategory",
+      "method": "PUT",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/spending-category",
+      "tag": "Transaction Feed",
+      "summary": "Changes the spending category for a transaction",
+      "scopes": [
+        "transaction:edit"
+      ],
+      "group": "organise",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "spendingCategory"
+        ],
+        "fields": [
+          "spendingCategory",
+          "permanentSpendingCategoryUpdate",
+          "previousSpendingCategoryReferencesUpdate"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "updateUserNote",
+      "method": "PUT",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/{feedItemUid}/user-note",
+      "tag": "Transaction Feed",
+      "summary": "Changes the user-specified note attached to a transaction",
+      "scopes": [
+        "transaction:edit"
+      ],
+      "group": "organise",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "feedItemUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "userNote"
+        ],
+        "fields": [
+          "userNote"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "queryPaginatedFeedItemsByCategoryWithTransactionTimesBetween",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/paginated-transactions",
+      "tag": "Transaction Feed",
+      "summary": "Get paginated feed items for a category between two timestamps",
+      "scopes": [
+        "transaction:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid"
+      ],
+      "queryParams": [
+        {
+          "name": "minTransactionTimestamp",
+          "required": true,
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "name": "maxTransactionTimestamp",
+          "required": true,
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "name": "cursor",
+          "required": false,
+          "type": "string",
+          "format": "uuid"
+        },
+        {
+          "name": "pageToFetch",
+          "required": false,
+          "type": "string"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "queryFeedItemsByCategoryWithTransactionTimesBetween",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/category/{categoryUid}/transactions-between",
+      "tag": "Transaction Feed",
+      "summary": "Get the account holder's feed items for the specified category, which were created between two timestamps",
+      "scopes": [
+        "transaction:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid"
+      ],
+      "queryParams": [
+        {
+          "name": "minTransactionTimestamp",
+          "required": true,
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "name": "maxTransactionTimestamp",
+          "required": true,
+          "type": "string",
+          "format": "date-time"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "stopRoundUpGoal",
+      "method": "DELETE",
+      "path": "/api/v2/feed/account/{accountUid}/round-up",
+      "tag": "Feed Round-up",
+      "summary": "Deletes the round-up goal associated with an account if one exists",
+      "scopes": [
+        "savings-goal:delete"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "fetchRoundUpGoal",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/round-up",
+      "tag": "Feed Round-up",
+      "summary": "Returns the the round-up goal associated with an account if one has been created",
+      "scopes": [
+        "savings-goal:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "activateRoundUpGoal",
+      "method": "PUT",
+      "path": "/api/v2/feed/account/{accountUid}/round-up",
+      "tag": "Feed Round-up",
+      "summary": "Activates transaction round-up and adds remainder to savings goal",
+      "scopes": [
+        "savings-goal:create"
+      ],
+      "group": "savings",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "roundUpGoalUid",
+          "roundUpMultiplier"
+        ],
+        "fields": [
+          "roundUpGoalUid",
+          "roundUpMultiplier"
+        ]
+      },
+      "response": "none"
+    },
+    {
+      "operationId": "queryFeedItemsWithTransactionTimesBetween",
+      "method": "GET",
+      "path": "/api/v2/feed/account/{accountUid}/settled-transactions-between",
+      "tag": "Transaction Feed",
+      "summary": "Get the account holder's settled feed items for the specified account, which have settlement time between the two provided timestamps",
+      "scopes": [
+        "transaction:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid"
+      ],
+      "queryParams": [
+        {
+          "name": "minTransactionTimestamp",
+          "required": true,
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "name": "maxTransactionTimestamp",
+          "required": true,
+          "type": "string",
+          "format": "date-time"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getAuthorisingIndividual",
+      "method": "GET",
+      "path": "/api/v2/identity/individual",
+      "tag": "API User Identities",
+      "summary": "The individual who authorised the application",
+      "scopes": [
+        "authorising-individual:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "logoutIndividual",
+      "method": "PUT",
+      "path": "/api/v2/identity/logout",
+      "tag": "API User Identities",
+      "summary": "Logout the current individual",
+      "scopes": [],
+      "group": "account-settings",
+      "signed": false,
+      "confirm": true,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "getTokenIdentity",
+      "method": "GET",
+      "path": "/api/v2/identity/token",
+      "tag": "API User Identities",
+      "summary": "Get current token identity",
+      "scopes": [],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getPayees",
+      "method": "GET",
+      "path": "/api/v2/payees",
+      "tag": "Payees",
+      "summary": "Get an account holder's payees",
+      "scopes": [
+        "payee:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "createPayee",
+      "method": "PUT",
+      "path": "/api/v2/payees",
+      "tag": "Payees",
+      "summary": "Create a payee",
+      "scopes": [
+        "payee:create"
+      ],
+      "group": "payees",
+      "signed": false,
+      "confirm": true,
+      "pathParams": [],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "payeeName",
+          "payeeType"
+        ],
+        "fields": [
+          "payeeName",
+          "phoneNumber",
+          "payeeType",
+          "firstName",
+          "middleName",
+          "lastName",
+          "businessName",
+          "dateOfBirth",
+          "accounts"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "deletePayee",
+      "method": "DELETE",
+      "path": "/api/v2/payees/{payeeUid}",
+      "tag": "Payees",
+      "summary": "Deletes a payee",
+      "scopes": [
+        "payee:delete"
+      ],
+      "group": "payees",
+      "signed": false,
+      "confirm": true,
+      "pathParams": [
+        "payeeUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "getPayee",
+      "method": "GET",
+      "path": "/api/v2/payees/{payeeUid}",
+      "tag": "Payees",
+      "summary": "Get a specific account holder payee",
+      "scopes": [
+        "payee:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "payeeUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "updatePayee",
+      "method": "PUT",
+      "path": "/api/v2/payees/{payeeUid}",
+      "tag": "Payees",
+      "summary": "Update a payee",
+      "scopes": [
+        "payee:edit"
+      ],
+      "group": "payees",
+      "signed": false,
+      "confirm": true,
+      "pathParams": [
+        "payeeUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "payeeName",
+          "payeeType"
+        ],
+        "fields": [
+          "payeeName",
+          "phoneNumber",
+          "payeeType",
+          "firstName",
+          "middleName",
+          "lastName",
+          "businessName",
+          "dateOfBirth",
+          "accounts"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "createPayeeAccount",
+      "method": "PUT",
+      "path": "/api/v2/payees/{payeeUid}/account",
+      "tag": "Payees",
+      "summary": "Create a payee account",
+      "scopes": [
+        "payee:create"
+      ],
+      "group": "payees",
+      "signed": false,
+      "confirm": true,
+      "pathParams": [
+        "payeeUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "accountIdentifier",
+          "bankIdentifier",
+          "bankIdentifierType",
+          "countryCode",
+          "defaultAccount",
+          "description"
+        ],
+        "fields": [
+          "description",
+          "defaultAccount",
+          "countryCode",
+          "accountIdentifier",
+          "bankIdentifier",
+          "bankIdentifierType",
+          "secondaryIdentifier"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "deletePayeeAccount",
+      "method": "DELETE",
+      "path": "/api/v2/payees/{payeeUid}/account/{accountUid}",
+      "tag": "Payees",
+      "summary": "Delete a payee account",
+      "scopes": [
+        "payee:delete"
+      ],
+      "group": "payees",
+      "signed": false,
+      "confirm": true,
+      "pathParams": [
+        "payeeUid",
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "listPaymentsForPayeeAccount",
+      "method": "GET",
+      "path": "/api/v2/payees/{payeeUid}/account/{accountUid}/payments",
+      "tag": "Payees",
+      "summary": "View a history of payments to your payee",
+      "scopes": [
+        "payee-transaction:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "payeeUid",
+        "accountUid"
+      ],
+      "queryParams": [
+        {
+          "name": "since",
+          "required": true,
+          "type": "string",
+          "format": "date"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "listPaymentOrdersForAccount",
+      "method": "GET",
+      "path": "/api/v2/payees/{payeeUid}/account/{accountUid}/scheduled-payments",
+      "tag": "Payees",
+      "summary": "Get scheduled payments",
+      "scopes": [
+        "scheduled-payment:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "payeeUid",
+        "accountUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "servePayeeImageFile",
+      "method": "GET",
+      "path": "/api/v2/payees/{payeeUid}/image",
+      "tag": "Payees",
+      "summary": "Serves the image for the payee",
+      "scopes": [
+        "payee-image:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "payeeUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "binary"
+    },
+    {
+      "operationId": "makeLocalPayment",
+      "method": "PUT",
+      "path": "/api/v2/payments/local/account/{accountUid}/category/{categoryUid}",
+      "tag": "Payments",
+      "summary": "Create payment",
+      "scopes": [
+        "pay-local:create",
+        "pay-local-once:create"
+      ],
+      "group": "payments",
+      "signed": true,
+      "confirm": true,
+      "pathParams": [
+        "accountUid",
+        "categoryUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "amount",
+          "externalIdentifier",
+          "reference"
+        ],
+        "fields": [
+          "externalIdentifier",
+          "destinationPayeeAccountUid",
+          "paymentRecipient",
+          "reference",
+          "amount",
+          "spendingCategory"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "listStandingOrders",
+      "method": "GET",
+      "path": "/api/v2/payments/local/account/{accountUid}/category/{categoryUid}/standing-orders",
+      "tag": "Payments",
+      "summary": "List standing orders",
+      "scopes": [
+        "standing-order:read",
+        "standing-order-own:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "createStandingOrder",
+      "method": "PUT",
+      "path": "/api/v2/payments/local/account/{accountUid}/category/{categoryUid}/standing-orders",
+      "tag": "Payments",
+      "summary": "Create a new standing order",
+      "scopes": [
+        "standing-order:create"
+      ],
+      "group": "payments",
+      "signed": true,
+      "confirm": true,
+      "pathParams": [
+        "accountUid",
+        "categoryUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "amount",
+          "externalIdentifier",
+          "reference",
+          "standingOrderRecurrence"
+        ],
+        "fields": [
+          "externalIdentifier",
+          "destinationPayeeAccountUid",
+          "paymentRecipient",
+          "reference",
+          "amount",
+          "standingOrderRecurrence",
+          "spendingCategory"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "cancelStandingOrder",
+      "method": "DELETE",
+      "path": "/api/v2/payments/local/account/{accountUid}/category/{categoryUid}/standing-orders/{paymentOrderUid}",
+      "tag": "Payments",
+      "summary": "Cancel a standing order",
+      "scopes": [
+        "standing-order:delete"
+      ],
+      "group": "payments",
+      "signed": true,
+      "confirm": true,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "paymentOrderUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "none"
+    },
+    {
+      "operationId": "getStandingOrder",
+      "method": "GET",
+      "path": "/api/v2/payments/local/account/{accountUid}/category/{categoryUid}/standing-orders/{paymentOrderUid}",
+      "tag": "Payments",
+      "summary": "Get a standing order",
+      "scopes": [
+        "standing-order:read",
+        "standing-order-own:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "paymentOrderUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "updateStandingOrder",
+      "method": "PUT",
+      "path": "/api/v2/payments/local/account/{accountUid}/category/{categoryUid}/standing-orders/{paymentOrderUid}",
+      "tag": "Payments",
+      "summary": "Update a standing order",
+      "scopes": [
+        "standing-order:create"
+      ],
+      "group": "payments",
+      "signed": true,
+      "confirm": true,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "paymentOrderUid"
+      ],
+      "queryParams": [],
+      "body": {
+        "contentType": "application/json",
+        "required": [
+          "amount",
+          "paymentOrderUid",
+          "reference",
+          "standingOrderRecurrence"
+        ],
+        "fields": [
+          "paymentOrderUid",
+          "reference",
+          "amount",
+          "standingOrderRecurrence",
+          "spendingCategory"
+        ]
+      },
+      "response": "json"
+    },
+    {
+      "operationId": "listNextPaymentDates",
+      "method": "GET",
+      "path": "/api/v2/payments/local/account/{accountUid}/category/{categoryUid}/standing-orders/{paymentOrderUid}/upcoming-payments",
+      "tag": "Payments",
+      "summary": "List the next payment dates of a standing order",
+      "scopes": [
+        "standing-order:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "accountUid",
+        "categoryUid",
+        "paymentOrderUid"
+      ],
+      "queryParams": [
+        {
+          "name": "count",
+          "required": false,
+          "type": "integer",
+          "format": "int32"
+        }
+      ],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getPaymentOrder",
+      "method": "GET",
+      "path": "/api/v2/payments/local/payment-order/{paymentOrderUid}",
+      "tag": "Payments",
+      "summary": "Get a payment order",
+      "scopes": [
+        "pay-local:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "paymentOrderUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getPaymentOrderPayments",
+      "method": "GET",
+      "path": "/api/v2/payments/local/payment-order/{paymentOrderUid}/payments",
+      "tag": "Payments",
+      "summary": "Get the payments associated with a payment order",
+      "scopes": [
+        "pay-local:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [
+        "paymentOrderUid"
+      ],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    },
+    {
+      "operationId": "getSettleUpProfile",
+      "method": "GET",
+      "path": "/api/v2/settle-up/profile",
+      "tag": "Settle Up",
+      "summary": "Fetch Settle Up profile for an account holder",
+      "scopes": [
+        "settle-up:read"
+      ],
+      "group": "view",
+      "signed": false,
+      "confirm": false,
+      "pathParams": [],
+      "queryParams": [],
+      "body": null,
+      "response": "json"
+    }
+  ]
+}

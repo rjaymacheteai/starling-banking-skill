@@ -1,0 +1,96 @@
+// Starling banking skill: configuration
+//
+// HOW TO USE THIS FILE
+//   1. Run:  node scripts/starling-banking.mjs init
+//      (this copies this file to your config folder as "config.json" for you), or copy it
+//      yourself to  ~/.config/starling-banking/config.json  and remove ".example".
+//   2. Change the values you want. Lines starting with // are comments and are ignored.
+//   3. Run:  node scripts/starling-banking.mjs doctor   to check everything is right.
+//
+// Your real config.json lives OUTSIDE the skill folder on purpose, so updating or
+// reinstalling the skill never overwrites it. It never contains your token or private
+// key, only the names/paths where to find them.
+//
+// SAFE DEFAULTS: with no config at all the skill is read-only. Nothing below is needed
+// unless you want it to do more.
+{
+  // Which Starling system to talk to.
+  //   "live"    your real bank account (use a personal access token)
+  //   "sandbox" Starling's fake test environment (use a sandbox token from the portal)
+  "environment": "live",
+
+  // What the agent is ALLOWED to do. List the groups you want switched on.
+  // "view" is always on, whether or not you list it. Start small; add more later.
+  //
+  //   "view"             read-only: accounts, balances, transactions, payees, cards,
+  //                      savings goals, direct debits
+  //   "organise"         edit transaction notes and categories, add receipts/attachments,
+  //                      change the profile image
+  //   "card-controls"    lock/unlock a card; switch ATM, online, contactless, gambling on/off
+  //   "savings"          create/edit savings goals, move money to and from goals, round-up
+  //   "payees"           add, rename or delete payees (needs a confirmation each time)
+  //   "payments"         send money to existing payees, cancel standing orders
+  //                      (needs a confirmation each time, limits below, and a signing key)
+  //   "account-settings" change email or address, cancel direct debits, log the token out
+  //                      (needs a confirmation each time)
+  //
+  // Example for "check my balance, tidy notes, and lock my card if it's lost":
+  //   "permissions": ["view", "organise", "card-controls"]
+  "permissions": ["view"],
+
+  // Where the skill finds your Starling personal access token. It is NOT stored here.
+  "auth": {
+    // Name of the environment variable holding the token (default shown).
+    // Set it in your shell:  export STARLING_ACCESS_TOKEN=...
+    "tokenEnv": "STARLING_ACCESS_TOKEN",
+    // Or keep the token in a file (permissions 600) and give its path. null = not used.
+    // If set, this is used instead of the environment variable.
+    "tokenFile": null
+  },
+
+  // Only needed for "payments" and "account-settings". Starling requires these requests
+  // to be digitally signed. Run  keys generate  to create the keys, upload the PUBLIC key
+  // in the Starling developer portal, then fill these in.
+  "signing": {
+    // The "Key Uid" the portal shows for your API public key, e.g.
+    // "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa". null = not set.
+    "keyUid": null,
+    // Path to your API PRIVATE key file, e.g. "~/.config/starling-banking/keys/starling-api-private.key".
+    "keyFile": null,
+    // "auto" picks the right one from your key. Others: "rsa-sha256", "rsa-sha512",
+    // "ecdsa-sha256", "ecdsa-sha512". Leave as "auto" unless Starling tells you otherwise.
+    "algorithm": "auto"
+  },
+
+  // If you have several accounts, the one to use when you don't say which.
+  // Get the UID from  accounts list.  null = ask when it isn't obvious.
+  "defaultAccountUid": null,
+
+  // Spending limits for "payments". REQUIRED if "payments" is switched on:
+  // payments are refused until both limits are set. Amounts are in pounds.
+  "limits": {
+    // Currency the limits are written in. Payments in other currencies are refused.
+    "currency": "GBP",
+    // The most the skill will send in ONE payment, e.g. 25 or 25.50. null = not set.
+    "perPayment": null,
+    // The most it will send in total per calendar day (your computer's local day).
+    // This counts payments made through this skill on this computer only. null = not set.
+    "perDay": null
+  },
+
+  // Optional: only allow payments to these payees (names or payee UIDs).
+  // Empty list [] means any payee you have already registered can be paid.
+  // Example: ["Alex Smith", "Landlord Ltd"]
+  "allowedPayees": [],
+
+  // How payments and other sensitive actions get approved.
+  "confirmation": {
+    //   "agent"    the agent shows you exactly what will happen and asks for a clear "yes"
+    //              in the chat before running the confirm step (works on every platform)
+    //   "terminal" you must type the code yourself in a terminal; chat approval is not
+    //              enough (stricter, but not possible from chat apps such as WhatsApp)
+    "mode": "agent",
+    // How long a prepared action stays valid before it expires: 1 to 60 minutes.
+    "expiresMinutes": 10
+  }
+}

@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.DS_Store
+evals-results/
+.local/
+*.log
+
+# Never commit anything user-specific or secret
+config.json
+.env
+*.key
+*.pem
+state/
