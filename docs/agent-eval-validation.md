@@ -1,6 +1,6 @@
 # Agent smoke evaluation — v0.2.0
 
-Historical evidence for the `v0.2.0` tag. Unreleased single-config/API-only changes
+Historical evidence for the `v0.2.0` tag. The v0.2.1 single-config/API-only changes
 have deterministic validation but have not been rerun against models.
 
 **Passed: 5/5 cases, 63/63 required checks.** Recorded 25 October 2026 with

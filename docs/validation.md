@@ -1,6 +1,6 @@
 # Validation recorded in this repository
 
-## Unreleased changes after v0.2.0
+## v0.2.1 — 25 October 2026
 
 **138 deterministic tests passed** for the single secret config, API-only generation,
 public-key derivation, required signing UID, token routing, no local spending/recipient

@@ -2,7 +2,7 @@
 name: starling-banking
 description: Read and manage Starling Bank accounts through the bundled guarded CLI. Use for Starling balances, transactions, payees, payments, cards, savings and exports. Payments and sensitive changes require a preview and fresh user approval.
 license: MIT-0
-metadata: {"version": "0.2.0", "openclaw": {"emoji": "🏦", "homepage": "https://github.com/rjaymacheteai/starling-banking-skill", "requires": {"bins": ["node"]}}}
+metadata: {"version": "0.2.1", "openclaw": {"emoji": "🏦", "homepage": "https://github.com/rjaymacheteai/starling-banking-skill", "requires": {"bins": ["node"]}}}
 ---
 
 # Starling banking

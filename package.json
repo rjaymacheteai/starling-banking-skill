@@ -1,6 +1,6 @@
 {
   "name": "starling-banking-skill",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Unofficial Agent Skill for working with a Starling Bank account through Starling's official API",
   "private": true,
   "license": "MIT-0",

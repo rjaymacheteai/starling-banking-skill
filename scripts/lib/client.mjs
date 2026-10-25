@@ -5,7 +5,7 @@ import { httpRequest } from './http.mjs';
 import { redact } from './redact.mjs';
 import { loadSigner, signedHeaders } from './signing.mjs';
 
-export const VERSION = '0.2.0';
+export const VERSION = '0.2.1';
 const HOSTS = { live: 'https://api.starlingbank.com', sandbox: 'https://api-sandbox.starlingbank.com' };
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 const SAFE_SEGMENT = /^[A-Za-z0-9_.-]+$/;
