@@ -13,8 +13,8 @@ Run `doctor --json` after changes; require exit code 0 and `data.ok: true`, and 
 | `auth.account.tokenFile` | `null` | Token file path. When set, takes precedence over `tokenEnv`. Protect with mode 600. |
 | `auth.payments.tokenEnv` | `"STARLING_PAYMENT_ACCESS_TOKEN"` | Optional token for payment initiation and identity verification only. |
 | `auth.payments.tokenFile` | `null` | Optional payment-token file; takes precedence over its environment variable. Protect with mode 600. |
-| `signing.keyUid` | `null` | API public key's UID from Starling, not the application client ID. |
-| `signing.keyFile` | `null` | Private signing key file path; protect with mode 600. |
+| `signing.keyUid` | `null` | Registered API public key UID (not the client ID). Optional overall; required for signed actions. |
+| `signing.keyFile` | `null` | API private signing key path; protect with mode 600. Rotation private key is not used here. |
 | `signing.algorithm` | `"auto"` | Normally leave unchanged. Also accepts `rsa-sha256`, `rsa-sha512`, `ecdsa-sha256`, `ecdsa-sha512`. |
 | `defaultAccountUid` | `null` | Account UID from `accounts list`. Otherwise commands resolve an unambiguous account or ask. |
 | `limits.currency` | `"GBP"` | Three-letter currency covered by payment limits. |

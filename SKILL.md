@@ -63,6 +63,24 @@ add the optional payment access token locally.” For rejection, missing scopes 
 holder mismatch, name the affected slot and the diagnostic's fix without exposing
 its value. Do not alter limits, credential sources or generate keys unless requested.
 
+### Optional signing setup
+
+API signing is optional overall, but mandatory for `makeLocalPayment`, `updateEmail`,
+`updateCurrentAddress` and `cancelStandingOrder`. Without `signing.keyUid` and a usable
+`signing.keyFile`, stop that action and explain: “This action needs an API signing key.
+Account reads and payee management can still be used.” Relay the CLI's signing error
+and link to [setup.md](references/setup.md); never silently skip signing or generate
+keys without a setup request. Standing-order creation/update remain unsupported.
+
+For requested setup, explain the four generated files: register the **API public**
+and **rotation public** keys with Starling; keep both private keys local/protected.
+Only the API private key is configured for routine signing. The rotation private
+key authorises replacement public API-key registration; keep it backed up, outside
+normal agent access if possible. It is not a second banking credential or a routine
+request-signing key. Starling specifies no maximum key age; do not invent expiry or
+trigger automatic rotation. This CLI generates pairs but does not automate portal
+key rotation. Guide the user through Starling's documented process when requested.
+
 ### Help a new user through setup
 
 A banking request authorises its read-only diagnostic preflight. If the user is only

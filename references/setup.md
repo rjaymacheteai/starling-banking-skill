@@ -49,7 +49,7 @@ See [configuration](configuration.md) for every setting and path override.
    The CLI routes automatically; no manual config switching is needed. Keep
    `pay-local:read`, `payee:read`, `account:read` and `transaction:read` on the account
    token for lookups/status. Omit the payment token entirely if you do not want payments.
-3. For payments, run `starling-banking keys generate`. Register both generated
+3. For payments or other signed actions, run `starling-banking keys generate`. Register both generated
    **public** keys in Starling's Personal Access → Keys page (API first, rotation
    second). Keep both private keys local and back up the rotation key. Set
    `signing.keyUid` to the API key UID shown by Starling and `signing.keyFile` to
@@ -65,6 +65,21 @@ See [configuration](configuration.md) for every setting and path override.
 The agent must preview the exact payment/payee change and obtain fresh approval
 before confirming. Starling may additionally require approval in its app. See
 [commands](commands.md) for syntax and [troubleshooting](troubleshooting.md) for errors.
+
+## Signing without payments
+
+Signing keys are optional unless you want payment initiation, email/address changes
+or standing-order cancellation. The last three use the account token and do not
+require a payment token. With no signing key, those actions stop with a setup error;
+reads and payee creation/updates remain available with their required scopes.
+
+`keys generate` creates API and rotation pairs. Upload both public keys; configure
+only the API private key path and its registered public Key UID. Store the rotation
+private key securely (an offline backup is suitable); ordinary banking does not use it.
+It signs a replacement public API key during Starling's rotation process. There is
+no maximum key age or automatic expiry schedule specified by Starling. Rotate when
+needed, such as after suspected compromise, rather than because a timer requires it.
+The CLI does not automate portal rotation. [Official signing and rotation documentation](https://developer-sandbox.starlingbank.com/docs).
 
 ## Sandbox and credential maintenance
 

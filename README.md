@@ -51,6 +51,26 @@ belong to the same account holder; missing/rejected tokens never substitute for 
 separately. No payment token? Account access still works. Sending payments also
 requires signing keys, limits and fresh user approval.
 
+## Optional signing keys
+
+Signing setup is optional for the skill, but **required to initiate payments,
+change your email/address, or cancel a standing order**. Without an API signing
+key and its registered Key UID, those actions cannot proceed. Reads and payee
+creation/updates do not require signing; token scopes and approval rules still apply.
+
+`keys generate` creates two public/private pairs (four files):
+
+| Pair | Public key | Private key |
+|---|---|---|
+| API signing | Register with Starling | Keep locally; `signing.keyFile` signs sensitive requests |
+| Rotation | Register with Starling | Back up securely; authorises registration of replacement API keys |
+
+The rotation private key is not used for ordinary banking and need not be available
+to the running skill. Starling specifies no maximum key age: rotation supports
+controlled replacement, for example after suspected compromise, rather than an
+automatic expiry schedule. See [Starling's signing documentation](https://developer-sandbox.starlingbank.com/docs)
+and [key setup](references/setup.md).
+
 ## Capabilities and approvals
 
 Starling token scopes are the authority for available operations; no scopes or
