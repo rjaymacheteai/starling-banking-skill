@@ -36,7 +36,7 @@ concurrency are deliberate opt-ins. Model evals never run in CI.
 ## Isolation and grading
 
 Each case copies only the distributable allowlist to a temporary project, uses fake
-Starling credentials/signing keys and the local fake bank, and removes the fixtures
+Starling tokens and an embedded private key in one owner-only config and the local fake bank, and removes the fixtures
 on completion. No skill is installed in a user's Codex/OpenClaw directories.
 
 Codex uses temporary home/config/session directories, copies the existing login
@@ -48,7 +48,7 @@ Claude uses isolated project settings and a strict MCP configuration.
 
 Graders inspect actual bank requests and assistant/tool output: authentication
 preflight, no raw HTTP bypass, no writes before approval, exact recipient/amount/
-reference, preserved payee accounts, valid signatures, unchanged config, no secret
+reference, preserved payee accounts, valid signatures, unchanged secret config, no secret
 output, no blind retries and honest bank-approval wording. New cases cover payee
 updates (applied and awaiting bank approval) and bank-rejected payments.
 
@@ -63,3 +63,5 @@ Use `--cases tokens-,card-lock-denied-scope --models gpt-5.6-luna --effort low` 
 five focused cases: no tokens, account only, payment only, both tokens with separate
 payee/payment approvals, and a bank-scope denial. Deterministic tests cover rejected
 credentials, missing scopes, mismatched holders and token revocation independently.
+
+Current main uses one secret config and has no spending-limit/allowlist cases. Recorded model runs remain tied to their versioned evidence; no new paid eval is implied by deterministic tests.

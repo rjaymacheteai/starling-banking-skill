@@ -22,8 +22,3 @@ export function formatMoney(minorUnits, currency = 'GBP') {
   const sym = SYMBOLS[currency];
   return sym ? `${sign}${sym}${withCommas}` : `${sign}${withCommas} ${currency}`;
 }
-
-// Limits are written in the config in major units (25 means £25.00).
-export function limitToMinor(major) {
-  return major == null ? null : Math.round(major * 100);
-}

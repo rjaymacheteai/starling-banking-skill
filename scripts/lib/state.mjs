@@ -96,7 +96,7 @@ export class PlanStore {
 }
 
 // Append-only record of every write the skill sends. It doubles as the audit trail and
-// as the source for the daily spending limit. Bodies and secrets are never stored.
+// for status/replay protection. Bodies and secrets are never stored.
 export class Ledger {
   constructor(env = process.env) {
     this.file = path.join(stateDir(env), 'ledger.jsonl');
@@ -122,18 +122,4 @@ export class Ledger {
       .filter(Boolean);
   }
 
-  // Money sent today (local calendar day) in one currency. Attempts whose outcome is
-  // unknown count as spent, because the money may have left.
-  spentToday(currency, now = new Date(), { excludePlan } = {}) {
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    // One payment can leave several entries (unknown, then submitted after a retry), so only
-    // the latest entry per plan counts.
-    const latest = new Map();
-    for (const e of this.entries()) {
-      if (e.kind !== 'payment' || e.currency !== currency || Date.parse(e.ts) < dayStart) continue;
-      if (excludePlan && e.planCode === excludePlan) continue;
-      latest.set(e.planCode ?? e.ts, e);
-    }
-    return [...latest.values()].filter((e) => ['submitted', 'unknown'].includes(e.outcome)).reduce((sum, e) => sum + e.amountMinor, 0);
-  }
 }

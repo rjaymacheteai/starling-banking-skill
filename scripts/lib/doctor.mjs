@@ -4,7 +4,7 @@ import { getOperation, loadCatalogue, scopesSatisfied } from './catalogue.mjs';
 import { fileModeWarning, loadConfig, loadToken } from './config.mjs';
 import { assertPaymentIdentity } from './auth.mjs';
 import { CliError } from './errors.mjs';
-import { expandHome, stateDir } from './paths.mjs';
+import { stateDir } from './paths.mjs';
 import { loadSigner, selfTest } from './signing.mjs';
 
 const ICON = { pass: '✓', warn: '!', fail: '✗', info: '·' };
@@ -14,7 +14,7 @@ const ICON = { pass: '✓', warn: '!', fail: '✗', info: '·' };
 export async function runDoctor(env = process.env) {
   const checks = [];
   const add = (status, title, detail, fix) => checks.push({ status, title, ...(detail ? { detail } : {}), ...(fix ? { fix } : {}) });
-  const modeWarning = (file, label) => { const w = fileModeWarning(expandHome(file)); if (w) add('warn', `${label} is readable by other users`, w); };
+  const modeWarning = (file, label) => { const w = fileModeWarning(file); if (w) add('warn', `${label} is readable by other users`, w); };
   const major = Number(process.versions.node.split('.')[0]);
   add(major >= 18 ? 'pass' : 'fail', `Node.js ${process.versions.node}`, major < 18 ? 'Node.js 18 or newer is required.' : undefined);
   try { add('pass', `Operation catalogue loaded (${loadCatalogue().count} operations)`); }
@@ -24,7 +24,9 @@ export async function runDoctor(env = process.env) {
   try { loaded = loadConfig(env); }
   catch (e) { add('fail', 'Config file has problems', e.message, e.hint); return finish(checks); }
   const { config, file, found, warnings } = loaded;
-  add(found ? 'pass' : 'info', found ? `Config found at ${file}` : 'No config file; default credential sources apply', undefined, found ? undefined : 'Optional: run `init` to customise settings.');
+  if (!found) { add('fail', 'No local config.json found', file, 'Run `init`, then fill auth.accountToken locally. Never paste the config into chat.'); return finish(checks); }
+  add('pass', `Config found at ${file}`);
+  modeWarning(file, 'Secret config file');
   for (const w of warnings) add('warn', 'Config setting ignored', w);
   add('info', `Environment: ${config.environment}`, 'Capabilities are controlled by Starling token scopes; there are no local permission switches.');
   try { const dir = stateDir(env); mkdirSync(dir, { recursive: true, mode: 0o700 }); accessSync(dir, constants.W_OK); add('pass', `History folder is writable (${dir})`); }
@@ -34,7 +36,6 @@ export async function runDoctor(env = process.env) {
   try {
     const credential = loadToken(config, env);
     add('pass', `Account access token found (${credential.source})`);
-    if (config.auth.account.tokenFile) modeWarning(config.auth.account.tokenFile, 'Account token file');
     account = new StarlingClient({ config, env, token: credential.token, retryDelayMs: 0 });
     identity = (await account.call(getOperation('getTokenIdentity'))).data;
     add('pass', `Reached Starling (${baseUrlFor(config, env)}) and the token is accepted`, identity.expiresAt ? `Token expires: ${identity.expiresAt}` : undefined);
@@ -56,7 +57,6 @@ export async function runDoctor(env = process.env) {
     const credential = loadToken(config, env, 'payments');
     paymentPresent = true;
     add('pass', `Optional payment access token found (${credential.source})`);
-    if (config.auth.payments.tokenFile) modeWarning(config.auth.payments.tokenFile, 'Payment token file');
     if (identity) {
       const payment = new StarlingClient({ config, env, token: credential.token, tokenRole: 'payments', retryDelayMs: 0 });
       assertPaymentIdentity(identity, (await payment.call(getOperation('getTokenIdentity'))).data);
@@ -66,30 +66,22 @@ export async function runDoctor(env = process.env) {
   } catch (e) {
     if (!(e instanceof CliError)) throw e;
     const missing = e.code === 'NO_PAYMENT_TOKEN';
-    add(missing && !config.auth.payments.tokenFile ? 'info' : 'warn', missing ? 'Optional payment access token is not configured; payments are unavailable' : 'Payment access is unavailable', `${e.code}: ${e.message}`, e.hint);
+    add(missing ? 'info' : 'warn', missing ? 'Optional payment access token is not configured; payments are unavailable' : 'Payment access is unavailable', `${e.code}: ${e.message}`, e.hint);
   }
 
   const skew = Math.abs(account?.skewMs ?? 0);
   if (account?.skewMs != null) add(skew > 2000 ? 'warn' : 'pass', skew > 2000 ? `Your clock is about ${(skew / 1000).toFixed(1)}s away from Starling's` : 'Clock is in sync with Starling', skew > 2000 ? 'Signed requests require an accurate clock; enable automatic time sync.' : undefined);
   let signingReady = false;
-  if (paymentPresent || config.signing.keyUid || config.signing.keyFile) {
+  if (paymentPresent || config.signing.keyUid || config.signing.privateKey) {
     try {
       const signer = loadSigner(config);
       signingReady = selfTest(signer);
       add(signingReady ? 'pass' : 'warn', signingReady ? `Signing key works (${signer.algorithm}, key uid ${signer.keyUid})` : 'Signing key failed its self-test', 'Checked locally; Starling verifies public-key registration on a signed request.');
-      modeWarning(signer.keyFile, 'Private key file');
     } catch (e) { if (!(e instanceof CliError)) throw e; add('warn', 'Signing is not ready', e.message, e.hint); }
   } else add('info', 'No signing key configured', 'Read-only use does not need keys. Signed changes require setup.');
 
-  const { perPayment, perDay, currency } = config.limits;
-  const limitsReady = perPayment != null && perDay != null;
-  if (limitsReady) add('pass', `Spending limits: ${currency} ${perPayment} per payment, ${currency} ${perDay} per day`);
-  else add(paymentPresent ? 'warn' : 'info', 'Payment spending limits are not set', 'Set limits.perPayment and limits.perDay only if you want to send payments.');
-  if (paymentPresent) {
-    add('info', config.allowedPayees.length ? `Payments restricted to: ${config.allowedPayees.join(', ')}` : 'Any registered payee can be paid (allowedPayees is empty)');
-    add('info', `Confirmation mode: ${config.confirmation.mode}`, config.confirmation.mode === 'terminal' ? 'User approval requires typing a code in a terminal.' : 'The agent must obtain fresh approval after showing the exact preview.');
-  }
-  const paymentsReady = !!identity && paymentValid && signingReady && limitsReady && skew <= 4000;
+  if (paymentPresent) add('info', `Confirmation mode: ${config.confirmation.mode}`, config.confirmation.mode === 'terminal' ? 'User approval requires typing a code in a terminal.' : 'The agent must obtain fresh approval after showing the exact preview.');
+  const paymentsReady = !!identity && paymentValid && signingReady && skew <= 4000;
   if (!paymentsReady) add('info', 'Payments are not ready; account access can still be used', 'Resolve payment-specific setup only if you want to send money.');
   return finish(checks, !!identity, paymentsReady);
 }

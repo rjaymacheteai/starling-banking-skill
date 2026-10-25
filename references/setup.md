@@ -1,92 +1,48 @@
 # Setup
 
-Requires Node.js 18+. In this guide, `starling-banking` means
-`node "<skill-directory>/scripts/starling-banking.mjs"`. No npm install is needed.
+Requires Node.js 18+. Here `starling-banking` means
+`node "<skill-directory>/scripts/starling-banking.mjs"`.
 
-## First use with an agent
+## Start with account access
 
-Ask “Check my Starling setup.” The agent runs `doctor`, explains any missing setup
-in plain language, and guides one step at a time. Ask it to initialise config or
-generate signing keys when you need those; it should not overwrite existing files.
-Once you supply credentials locally, say “Ready, check again.” No payment is needed
-to check setup. The two signing pairs are API + rotation/recovery; separate
-payee/payment tokens are a separate scope requirement.
+1. Ask “Help me set up Starling”, then approve initialisation, or run `starling-banking init`.
+2. In the [developer portal](https://developer.starlingbank.com), create an account
+   token with the non-initiation scopes you want. For basic reads use `account:read`,
+   `balance:read` and `transaction:read`; add payee scopes if needed.
+3. Privately edit the one generated config, placing the token in `auth.accountToken`.
+   Never send its contents to the agent. No token environment variables or separate
+   secret files are needed. Leave unused optional fields `null`.
+4. Say “Ready, check setup again” or run `doctor`. The diagnostic reads the config
+   internally and reports missing setup in plain language without exposing values.
 
-## Read-only access
+See [configuration](configuration.md) for the file location and every field.
 
-1. Link your account on the [Starling developer portal](https://developer.starlingbank.com)
-   and create a personal access token. This is the required account token for everything except payment initiation.
-   Select the non-initiation scopes you need; see [bank scopes](scopes.md). `account:read`, `balance:read` and
-   `transaction:read` cover basic account/balance/transaction reads.
-2. Supply the token locally, never in chat. For a temporary Bash/Zsh session:
-   ```sh
-   printf 'Starling access token: '
-   IFS= read -r -s STARLING_ACCESS_TOKEN
-   printf '\n'
-   export STARLING_ACCESS_TOKEN
-   ```
-   The hidden prompt keeps the token out of command text and shell history. The
-   CLI must inherit this variable. For persistent use, create an owner-only token
-   file (`chmod 600`) and configure `auth.account.tokenFile`. A hosted agent can use its
-   secret settings if they inject the token into the actual execution environment.
-3. Run `starling-banking doctor --json`. Require exit code 0 and `data.ok: true`;
-   review warnings and confirm the live/sandbox environment and intended account.
-   The diagnostic makes read-only API calls and checks configured signing locally.
+## Optional payments
 
-A config file is optional; the account token's bank scopes determine access. To customise settings, run
-`starling-banking init`, edit the generated external file, then run `doctor` again.
-See [configuration](configuration.md) for every setting and path override.
+Create a separate token with `pay-local:create` for the same holder and store it in
+`auth.paymentToken`. Keep account/payee/status reads on the account token. Starling
+personal tokens cannot combine payee creation and payment initiation scopes.
+No payment token is needed if you do not want to send money.
 
-## Enable payments or payee registration
+## Optional signed actions
 
-1. Choose the capabilities you want in Starling's token scopes; there are no local
-   capability switches. Give the account token only the non-initiation scopes you need.
-2. Create tokens with the necessary [scopes](scopes.md). A live personal token
-   cannot combine `payee:create` with `pay-local:create` or `standing-order:create`.
-   Keep non-initiation scopes, including `payee:create`, on the account token.
-   Optionally create a separate token with `pay-local:create` for the **same holder**,
-   supply it locally as `STARLING_PAYMENT_ACCESS_TOKEN` or `auth.payments.tokenFile`.
-   The CLI routes automatically; no manual config switching is needed. Keep
-   `pay-local:read`, `payee:read`, `account:read` and `transaction:read` on the account
-   token for lookups/status. Omit the payment token entirely if you do not want payments.
-3. For payments or other signed actions, run `starling-banking keys generate`. Register both generated
-   **public** keys in Starling's Personal Access → Keys page (API first, rotation
-   second). Keep both private keys local and back up the rotation key. Set
-   `signing.keyUid` to the API key UID shown by Starling and `signing.keyFile` to
-   its private key path. A public key UID is different from an application client ID.
-   To enter the optional token privately, use the hidden prompt above with
-   `STARLING_PAYMENT_ACCESS_TOKEN` in place of `STARLING_ACCESS_TOKEN`.
-4. Set low positive `limits.perPayment` and `limits.perDay`; optionally restrict
-   `allowedPayees`. Run `doctor --json` again. Its local signing test does not prove
-   that Starling has registered the matching public key. Check
-   `data.capabilities.payments.ready` before initiating a payment; overall `data.ok`
-   covers account setup and may be true without the optional payment token.
+Payment initiation, email/address changes and standing-order cancellation need signing.
+For requested setup, run `keys generate` (RSA default, or `--type ecdsa`). It stores
+only the private API key in config and displays its public key. Register that public
+key with Starling and put the resulting API Key UID in `signing.keyUid`. You can
+show the public key again with `keys public`; never read the secret config to share it.
 
-The agent must preview the exact payment/payee change and obtain fresh approval
-before confirming. Starling may additionally require approval in its app. See
-[commands](commands.md) for syntax and [troubleshooting](troubleshooting.md) for errors.
+If the portal requires a rotation key/upload signature, stop: that workflow is
+currently deferred. See [R01](decisions-and-limitations.md#risks-and-present-limitations).
+Existing rotation files are not used, overwritten or deleted by these commands.
 
-## Signing without payments
+Run `doctor` again. Its signing check is local; Starling checks registration on a
+signed request. For payments also require `capabilities.payments.ready`, then retain
+the exact preview and fresh approval. Starling may separately require app approval.
 
-Signing keys are optional unless you want payment initiation, email/address changes
-or standing-order cancellation. The last three use the account token and do not
-require a payment token. With no signing key, those actions stop with a setup error;
-reads and payee creation/updates remain available with their required scopes.
+## Sandbox
 
-`keys generate` creates API and rotation pairs. Upload both public keys; configure
-only the API private key path and its registered public Key UID. Store the rotation
-private key securely (an offline backup is suitable); ordinary banking does not use it.
-It signs a replacement public API key during Starling's rotation process. There is
-no maximum key age or automatic expiry schedule specified by Starling. Rotate when
-needed, such as after suspected compromise, rather than because a timer requires it.
-The CLI does not automate portal rotation. [Official signing and rotation documentation](https://developer-sandbox.starlingbank.com/docs).
-
-## Sandbox and credential maintenance
-
-Use `environment: "sandbox"` with simulator credentials for fake money. Separate
-configs/runtime directories keep different holders or live/sandbox state apart.
-Run `doctor` after changing configuration, credentials or environment.
-
-Keep token and private-key files owner-only (`chmod 600`). Never share their contents
-with the agent. If exposed, revoke and replace them locally. Token refresh is not
-automated; supply a replacement through the same protected source when needed.
+Use `environment: "sandbox"` with simulator credentials in the same config structure.
+Different simulated holders use separate isolated fixture configs during development.
+Never copy live credentials into sandbox tests. [Commands](commands.md) and
+[troubleshooting](troubleshooting.md) describe supported operations and errors.

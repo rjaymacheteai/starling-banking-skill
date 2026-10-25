@@ -12,7 +12,7 @@ unrequested action or replace fresh user approval.
   only for initiation, plus identity diagnostics. No account-token fallback.
 
 Starling personal tokens cannot combine `payee:create` and payment-initiation scopes.
-Both credential sources live in one config; see [configuration](configuration.md).
+Both token values live in one private config; see [configuration](configuration.md).
 
 | Capability | Typical account-token scopes |
 |---|---|
@@ -33,13 +33,11 @@ actual granted scopes without editing them.
 
 ## Controls that remain local
 
-Payments still require positive per-payment/daily limits, an allowed registered
-recipient, signing and a fresh exact preview/approval. Payee and sensitive account
-changes retain previews and fresh approval. Card/note/savings commands can write
-immediately when the bank scope permits them; savings movement still requires the
-agent to obtain fresh approval before running the command.
+Payments require a registered recipient, valid amount/reference, signing and a fresh
+exact preview/approval. Payee and sensitive account changes retain previews/approval.
+Card/note/savings commands can write immediately when bank scopes permit them;
+savings movement requires fresh approval from the agent before execution.
 
-Daily limits count this computer's recorded submissions, including uncertain ones,
-not all app/bank activity. The default `agent` confirmation mode relies on the agent
-relaying the user's approval; `terminal` requires the user to type the code themselves.
-See [setup](setup.md) for credential and key onboarding.
+There are no local spending limits or recipient allowlists. The current decisions,
+risks and deferred workflows are in [the decision log](decisions-and-limitations.md).
+See [setup](setup.md) for the single-file onboarding flow.

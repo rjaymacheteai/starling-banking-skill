@@ -24,8 +24,9 @@ mkdirSync(runDir, { recursive: true, mode: 0o700 });
 const report = { runId, environment: 'sandbox', phase: values.phase, cases: [], resources: {}, startedAt: new Date().toISOString() };
 const save = () => writeFileSync(path.join(runDir, 'report.json'), JSON.stringify(report, null, 2) + '\n', { mode: 0o600 });
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const liveTokens = ['access-token', 'tokens/read-only.token', 'tokens/payees.token', 'tokens/payments.token']
-  .map((f) => path.join(root, '.local', f)).filter(existsSync).map((f) => readFileSync(f, 'utf8'));
+const liveConfigFile = path.join(root, '.local', 'config.json');
+const liveAuth = existsSync(liveConfigFile) ? JSON.parse(readFileSync(liveConfigFile, 'utf8')).auth ?? {} : {};
+const liveTokens = [liveAuth.accountToken, liveAuth.paymentToken].filter(Boolean);
 class Blocked extends Error {}
 class Skipped extends Error {}
 const contexts = new Map();
@@ -35,22 +36,18 @@ function context(profile) {
   const paths = sandboxPaths(root, profile);
   const env = { ...process.env, STARLING_BANKING_HOME: paths.home, STARLING_BANKING_CONFIG: paths.configFile, STARLING_BANKING_RETRY_DELAY_MS: '0' };
   delete env.STARLING_BANKING_TEST_BASE_URL;
-  delete env.STARLING_PAYMENT_ACCESS_TOKEN;
   const resources = { payees: [], goals: [], notesToRestore: [], pendingApprovals: [] };
   report.resources[profile] = resources;
   const ctx = { profile, paths, env, resources };
   ctx.call = async (args) => {
     // Reload and guard each call, including cleanup. Runtime config/state never leave this sandbox customer.
     const base = loadConfig({ ...env, STARLING_BANKING_CONFIG: paths.configFile }).config;
-    assertSandboxConfig(base, env, paths.tokenFile);
-    assertSandboxToken(readFileSync(paths.tokenFile, 'utf8'), liveTokens);
-    const configFile = path.join(paths.home, 'suite.config.json');
-    // Sandbox OAuth fixtures explicitly use their isolated simulator token for both roles.
-    const config = { ...base, auth: { ...base.auth, payments: { ...base.auth.payments, tokenFile: paths.tokenFile } }, confirmation: { mode: 'agent', expiresMinutes: 10 }, limits: { currency: 'GBP', perPayment: 1, perDay: 10 } };
-    writeFileSync(configFile, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
+    assertSandboxConfig(base, env, paths.configFile);
+    assertSandboxToken(base.auth.accountToken ?? '', liveTokens);
+    if (base.auth.paymentToken) assertSandboxToken(base.auth.paymentToken, liveTokens);
     await sleep(Math.max(0, 1100 - (Date.now() - lastCall)));
     lastCall = Date.now();
-    const result = await main(args, { ...env, STARLING_BANKING_CONFIG: configFile });
+    const result = await main(args, env);
     const json = JSON.parse(result.stdout);
     if (result.exitCode !== 0 || json.status === 'error') {
       const e = new Error(json.error?.message ?? 'CLI failed');

@@ -1,138 +1,78 @@
 # Starling Banking Skill
 
-An unofficial skill for your own Starling Bank account: balances, transactions,
-payees, payments, cards, savings and CSV exports. It includes agent instructions
-and a dependency-free Node.js CLI. Requires Node.js 18+ on the execution host.
+An unofficial skill for your own Starling account: balances, transactions, payees,
+payments, cards, savings and CSV exports. Requires Node.js 18+; no npm dependencies.
+Not affiliated with Starling Bank. [MIT-0](LICENSE), supplied without warranty.
 
-Not affiliated with or supported by Starling Bank. Licensed under [MIT-0](LICENSE),
-without warranty. You control credentials and authorise bank actions.
+## Set up once, in one file
 
-## Get started
+1. Ask the agent to initialise setup, or run `node scripts/starling-banking.mjs init`
+   from the skill folder.
+2. Privately fill the generated `~/.config/starling-banking/config.json`
+   (Windows: `%APPDATA%\starling-banking\config.json`). The file contains secrets;
+   keep it owner-only and never send its contents to the agent.
+3. Run `node scripts/starling-banking.mjs doctor`, or ask the agent to check setup.
 
-1. Create your account access token in the [Starling developer portal](https://developer.starlingbank.com).
-2. Supply it privately to the host running the skill, using `STARLING_ACCESS_TOKEN`
-   or a protected token file. Never paste tokens or private keys into chat.
-3. From the skill folder, run:
-   ```sh
-   node scripts/starling-banking.mjs doctor --json
-   ```
-4. Check that it succeeds and shows the intended environment/account, then ask:
-   “What's my Starling balance?”
-
-Account access works without a config file, subject to token scopes. To customise settings, run
-`node scripts/starling-banking.mjs init` and edit the generated external config.
-Skill updates preserve your settings, keys and history.
-
-Follow [setup](references/setup.md) for credential entry and signing keys.
-Use [configuration](references/configuration.md) for settings and paths.
-
-## Two access tokens, one config
-
-**This repository assumes `STARLING_ACCESS_TOKEN` is the required, wider-scoped
-account token for everything except payment initiation.** Give it the scopes for
-all non-initiation capabilities you want, including payee creation if needed;
-exclude `pay-local:create` and `standing-order:create`. Wider access does not
-mean you must grant every available scope. There are no local permission switches; Starling enforces the token scopes.
-
-`STARLING_PAYMENT_ACCESS_TOKEN` is **optional**: add a separate token with
-`pay-local:create` only when you want to send payments. The CLI uses it solely for
-payment initiation, plus read-only credential verification. Reads, payees, payment
-status and standing-order cancellation use the account token. Both tokens must
-belong to the same account holder; missing/rejected tokens never substitute for each other.
+The config holds actual credentials, not environment-variable names or paths to
+other secret files:
 
 ```json
-"auth": {
-  "account": { "tokenEnv": "STARLING_ACCESS_TOKEN", "tokenFile": null },
-  "payments": { "tokenEnv": "STARLING_PAYMENT_ACCESS_TOKEN", "tokenFile": null }
+{
+  "environment": "live",
+  "auth": {
+    "accountToken": "<required account token>",
+    "paymentToken": null
+  },
+  "signing": { "keyUid": null, "privateKey": null, "algorithm": "auto" },
+  "defaultAccountUid": null,
+  "confirmation": { "mode": "agent", "expiresMinutes": 10 }
 }
 ```
 
-`doctor` explains missing required account setup and optional payment readiness
-separately. No payment token? Account access still works. Sending payments also
-requires signing keys, limits and fresh user approval.
+The **account token** is used for everything except payment initiation. Grant the
+non-initiation scopes you need, including payee creation if wanted. The optional
+**payment token** needs `pay-local:create` for the same holder. Store it in
+`auth.paymentToken` only if you want payments. The CLI routes automatically, with
+no fallback. See [setup](references/setup.md) and [config fields](references/configuration.md).
 
-## Optional signing keys
+## Optional API signing
 
-Signing setup is optional for the skill, but **required to initiate payments,
-change your email/address, or cancel a standing order**. Without an API signing
-key and its registered Key UID, those actions cannot proceed. Reads and payee
-creation/updates do not require signing; token scopes and approval rules still apply.
+Signing is required for payment initiation, email/address changes and standing-order
+cancellation. It is unnecessary for reads and payee creation/updates.
 
-`keys generate` creates two public/private pairs (four files):
+`keys generate` creates one API public/private pair, stores the private key directly
+in config and shows only the public key. Register that public key with Starling, then
+save its **API Key UID** in `signing.keyUid`. The UID is needed as the signature's
+`keyid`; it is not an access token. `keys public` safely shows the public key again.
 
-| Pair | Public key | Private key |
-|---|---|---|
-| API signing | Register with Starling | Keep locally; `signing.keyFile` signs sensitive requests |
-| Rotation | Register with Starling | Back up securely; authorises registration of replacement API keys |
+Signing registration/replacement constraints and deferred rotation work are recorded
+in [decisions, risks and limitations](references/decisions-and-limitations.md#risks-and-present-limitations).
 
-The rotation private key is not used for ordinary banking and need not be available
-to the running skill. Starling specifies no maximum key age: rotation supports
-controlled replacement, for example after suspected compromise, rather than an
-automatic expiry schedule. See [Starling's signing documentation](https://developer-sandbox.starlingbank.com/docs)
-and [key setup](references/setup.md).
+## Using the skill
 
-## Capabilities and approvals
+Ask for a balance, a payee lookup or an exact change. Starling enforces token scopes.
+Payments, payee changes and sensitive account changes require an exact CLI preview,
+fresh user approval, then one confirmation. Any bank-app approval is separate.
+Optional terminal mode requires the user to type the code themselves.
 
-Starling token scopes are the authority for available operations; no scopes or
-permission groups are configured locally. A scope allows an API operation, not an
-autonomous action. The agent acts only on the user's exact request.
+No spending caps or recipient allowlist are configured locally. Payments still need
+a registered recipient, a valid amount/reference and the exact approval above.
 
-| Capability | Credential | Approval |
-|---|---|---|
-| Account/transaction reads, exports, payment status | Account token | Requested read |
-| Notes, categories and card controls | Account token | Exact requested change |
-| Savings goals/transfers | Account token | Fresh read-back/approval before moving money |
-| Payee creation/update/delete | Account token | CLI preview + fresh approval |
-| Payment initiation | Optional payment token | CLI preview + fresh approval, signing and limits |
-| Signed account changes / standing-order cancellation | Account token | CLI preview + fresh approval; signing where required |
-
-See [bank scopes](references/scopes.md) for the relevant token scopes and
-[configuration](references/configuration.md) for limits and credential sources.
-
-The agent uses only the bundled CLI. For payments, payee changes and account-setting
-changes it shows the exact preview, waits for a fresh explicit approval, then submits
-once. Optional terminal mode requires the user to type the code themselves. Any
-Starling app approval is separate. Uncertain submissions are never automatically resent.
-
-## Limits to understand
-
-- Supplied recipient names are not verified Confirmation of Payee; the API reports no name-match result.
-- Submission or HTTP success does not establish completion. Unresolved payment status is reported honestly.
-- No standing-order creation/update, background monitoring, automatic token refresh,
-  OAuth onboarding for other customers, account opening/closing or other banks.
-- One config holds both token sources; operation routing is automatic. Existing
-  `auth.tokenEnv` / `auth.tokenFile` settings remain account-token aliases. On upgrade,
-  payments require the new optional payment slot; there is no legacy fallback.
-  Remove old `permissions` config fields after reviewing bank scopes; `doctor` explains this migration.
-- Local spending limits cover this computer's recorded submissions. An agent with
-  unrestricted shell access can change local files; restricted bank token scopes remain essential.
-
-## Documentation and validation
-
-| Reader / task | Document |
+| Task | Documentation |
 |---|---|
-| User: credentials and signing setup | [Setup](references/setup.md) |
-| User: settings and runtime paths | [Configuration](references/configuration.md) |
-| User: capabilities and token scopes | [Bank scopes](references/scopes.md) |
-| User / agent: command syntax and errors | [Commands](references/commands.md), [troubleshooting](references/troubleshooting.md) |
-| Agent: required workflow and approvals | [SKILL.md](SKILL.md) |
-| Maintainer: architecture and developer checks | [Architecture](docs/architecture.md) |
-| Reviewer: checks performed and their limits | [Validation](docs/validation.md) |
-
-Current validation includes 151 deterministic tests and 5/5 focused lightweight
-OpenAI agent smoke checks (low reasoning), including all four token combinations. Earlier bank validation covered four
-sandbox customers and a live app-approved 1p payment with one settled debit. Not every catalogue
-operation or agent host has been validated. See the evidence linked above.
+| Credential/key onboarding | [Setup](references/setup.md) |
+| Single-file fields and location | [Configuration](references/configuration.md) |
+| Scopes / command syntax / failures | [Scopes](references/scopes.md), [commands](references/commands.md), [troubleshooting](references/troubleshooting.md) |
+| Agent workflow | [SKILL.md](SKILL.md) |
+| Design decisions, risks, unsupported scope and future work | [Decision log](references/decisions-and-limitations.md) |
+| Architecture / recorded validation | [Architecture](docs/architecture.md), [validation](docs/validation.md) |
 
 Security reports: [SECURITY.md](SECURITY.md). Attribution: [third-party notices](THIRD_PARTY_NOTICES.md).
 
 ## Installation
 
-For Codex, Claude Code, OpenClaw or another Agent Skills host, add this repository
-through the host's skill installation flow, or place the extracted skill release
-in its configured skills directory. The repository root is the skill; its name is
-`starling-banking`. [Releases](https://github.com/rjaymacheteai/starling-banking-skill/releases)
-include a custom skill-only archive and checksum; use that asset for a minimal
-manual install. Git installs and GitHub’s automatic source archives may include
-the full tagged repository. No npm dependencies are required.
-Credentials must be available to the actual execution environment, including any cloud or sandbox host.
+Add this repository through your Agent Skills host, or extract the custom skill-only
+archive from [Releases](https://github.com/rjaymacheteai/starling-banking-skill/releases)
+into its skill directory. The root is the skill; its name is `starling-banking`.
+Git installs/source archives can include the full repo. Updates preserve your external
+config and history. Changes on `main` do not modify an existing pinned release.

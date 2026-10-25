@@ -10,9 +10,10 @@ Most commands use the account that is obvious (the only account, or the only PRI
 
 | Command | What it does |
 |---|---|
-| `doctor [--json]` | Checks account access and optional payment readiness separately, including token holder matching, scopes, signing and limits. JSON includes `capabilities.account.ready` / `capabilities.payments.ready`. |
-| `init [--force]` | Copies `config.json.example` to the user's config folder as `config.json`. |
-| `keys generate [--type rsa\|ecdsa] [--dir <folder>]` | Creates the API and rotation key pairs Starling needs for payments. Prints public keys only. Never overwrites. |
+| `doctor [--json]` | Checks account access and optional payment readiness separately, including token holder matching, scopes and optional signing. JSON includes `capabilities.account.ready` / `capabilities.payments.ready`. |
+| `init` | Creates an owner-only config.json from the default structure; never overwrites. |
+| `keys generate [--type rsa\|ecdsa]` | Stores one API private key in config.json and shows its public key. Never overwrites existing signing setup. |
+| `keys public` | Shows only the public key derived from the configured private key. |
 | `ops [search] [--category <name>] [--detail]` | Searches the API operations the skill knows about. |
 | `log [--limit 20]` | What this skill has sent from this computer (local record). |
 
@@ -37,7 +38,7 @@ Most commands use the account that is obvious (the only account, or the only PRI
 | `goals list`, `goals get <uid>`, `spaces list` | Savings goals and spaces. |
 | `mandates list`, `mandates get <uid>` | Direct debit mandates. |
 
-Anything not listed: `call <operationId> [--param name=value]… [--query name=value]… [--body '<json>' \| --body-file path] [--account …] [--out file] [--force]`. `call` applies the same token routing, payment limits and confirmations as everything else. Find names with `ops` or `operations.md`.
+Anything not listed: `call <operationId> [--param name=value]… [--query name=value]… [--body '<json>' \| --body-file path] [--account …] [--out file] [--force]`. `call` applies the same token routing, recipient validation and confirmations as everything else. Find names with `ops` or `operations.md`.
 
 ## Acting (requires the corresponding bank scopes)
 

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { main } from '../scripts/lib/cli.mjs';
 
-test('doctor reports a missing token as failure in both JSON and text modes', async () => {
+test('doctor reports a missing config as failure in both JSON and text modes', async () => {
   const home = mkdtempSync(path.join(os.tmpdir(), 'sbs-doctor-offline-'));
   try {
     const env = { STARLING_BANKING_HOME: home };
@@ -14,10 +14,10 @@ test('doctor reports a missing token as failure in both JSON and text modes', as
     assert.equal(json.exitCode, 1);
     assert.equal(report.status, 'error');
     assert.equal(report.data.ok, false);
-    assert.ok(report.data.checks.some((c) => c.status === 'fail' && c.title === 'Required account access token is missing'));
+    assert.ok(report.data.checks.some((c) => c.status === 'fail' && c.title === 'No local config.json found'));
     const text = await main(['doctor'], env);
     assert.equal(text.exitCode, 1);
-    assert.match(text.stdout, /Required account access token is missing/);
+    assert.match(text.stdout, /No local config.json found/);
   } finally {
     rmSync(home, { recursive: true, force: true });
   }

@@ -1,75 +1,49 @@
 #!/usr/bin/env node
-// Sandbox-only setup and connection check. No model calls and no bank writes.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+// Developer fixtures: one secret config per simulated holder; no token/key files.
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { main } from '../scripts/lib/cli.mjs';
-import { loadConfig } from '../scripts/lib/config.mjs';
-import { baseUrlFor } from '../scripts/lib/client.mjs';
+import { DEFAULTS, loadConfig, saveConfig } from '../scripts/lib/config.mjs';
 import { assertSandboxConfig, assertSandboxToken } from './lib/sandbox-guard.mjs';
 import { sandboxPaths } from './lib/sandbox-paths.mjs';
-
 const root = fileURLToPath(new URL('../', import.meta.url));
 const profile = process.argv[3] ?? 'default';
-const { home, configFile, tokenFile, keyDir } = sandboxPaths(root, profile);
-const env = { ...process.env, STARLING_BANKING_HOME: home, STARLING_BANKING_CONFIG: configFile };
-delete env.STARLING_BANKING_TEST_BASE_URL;
-delete env.STARLING_PAYMENT_ACCESS_TOKEN;
-const save = (file, value) => writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { mode: 0o600 });
-
-async function command(args) {
-  const r = await main(args, env);
-  let json;
-  try { json = JSON.parse(r.stdout); } catch { throw new Error('CLI did not return JSON.'); }
-  if (r.exitCode !== 0 || json.status === 'error') throw new Error([json.error?.code, json.error?.message, json.error?.hint].filter(Boolean).join(': '));
-  return json;
-}
-
+const { home, configFile } = sandboxPaths(root, profile);
+const env = { PATH: process.env.PATH, STARLING_BANKING_HOME: home, STARLING_BANKING_CONFIG: configFile };
+async function command(args) { const r = await main(args, env); const j = JSON.parse(r.stdout); if (r.exitCode) throw new Error([j.error?.code, j.error?.message, j.error?.hint].filter(Boolean).join(': ')); return j; }
 async function run() {
-  mkdirSync(home, { recursive: true, mode: 0o700 });
-  if (process.argv[2] === 'setup') {
-    if (!existsSync(configFile)) save(configFile, {
-      environment: 'sandbox', auth: { account: { tokenFile }, payments: { tokenFile } },
-      confirmation: { mode: 'agent', expiresMinutes: 10 },
-      limits: { currency: 'GBP', perPayment: 1, perDay: 10 },
-    });
-    const dir = keyDir;
-    if (!existsSync(path.join(dir, 'starling-api-private.key'))) await command(['keys', 'generate', '--dir', dir]);
-    console.log(`Sandbox config: ${configFile}`);
-    console.log(`Sandbox API public key: ${path.join(dir, 'starling-api-public.key')}`);
-    console.log(`Sandbox rotation public key: ${path.join(dir, 'starling-rotation-public.key')}`);
-    return;
+  const mode = process.argv[2];
+  if (mode === 'setup' && !existsSync(configFile)) {
+    const config = structuredClone(DEFAULTS); config.environment = 'sandbox';
+    // Customers in the same simulator app can share one registered API signing key.
+    const first = sandboxPaths(root, 'individual').configFile;
+    if (profile !== 'individual' && existsSync(first)) config.signing = loadConfig({ ...env, STARLING_BANKING_CONFIG: first }).config.signing;
+    saveConfig(configFile, config);
   }
   const { config, found } = loadConfig(env);
-  if (!found) throw new Error('Run npm run setup:sandbox to create the isolated sandbox config.');
-  assertSandboxConfig(config, env, tokenFile);
-  if (process.argv[2] === 'key') {
-    const uid = process.env.STARLING_SANDBOX_KEY_UID;
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uid ?? '')) throw new Error('The API Key UID must be a UUID.');
-    config.signing = { keyUid: uid, keyFile: path.join(keyDir, 'starling-api-private.key'), algorithm: 'auto' };
-    save(configFile, config);
-    console.log('Sandbox signing-key settings saved.');
+  if (!found) throw new Error('Run sandbox setup to create the isolated config.');
+  assertSandboxConfig(config, env, configFile);
+  if (mode === 'setup') {
+    if (!config.signing.privateKey) await command(['keys', 'generate']);
+    console.log(`Sandbox config: ${configFile}`);
+    console.log((await command(['keys', 'public'])).data.publicKeys.api);
     return;
   }
-  if (process.argv[2] !== 'check') throw new Error('Use setup, key or check.');
-  if (!existsSync(tokenFile) || !readFileSync(tokenFile, 'utf8').trim()) throw new Error('No sandbox token saved. Run npm run setup:sandbox in your terminal.');
-  const token = readFileSync(tokenFile, 'utf8').trim();
-  const liveFiles = ['access-token', 'tokens/read-only.token', 'tokens/payees.token', 'tokens/payments.token'];
-  const liveTokens = liveFiles.map((file) => path.join(root, '.local', file)).filter(existsSync).map((file) => readFileSync(file, 'utf8'));
-  assertSandboxToken(token, liveTokens);
-  const identity = (await command(['call', 'getTokenIdentity'])).data.result;
-  const accounts = (await command(['accounts', 'list'])).data.accounts;
-  if (!Array.isArray(identity?.scopes) || identity.authenticated === false) throw new Error('Sandbox identity response was not a valid authenticated identity.');
-  if (!Array.isArray(accounts) || !accounts.length) throw new Error('No sandbox accounts are visible; create a test customer/account in the simulator first.');
-  const report = {
-    checkedAt: new Date().toISOString(), customer: profile, environment: 'sandbox', apiHost: baseUrlFor(config, env),
-    authenticated: true, accountCount: accounts.length, bankWrites: false,
-    scopes: identity?.scopes ?? [], signingConfigured: !!config.signing.keyUid,
-  };
-  save(path.join(home, 'preflight.json'), report);
-  console.log(`Sandbox ${profile}: authentication passed; ${accounts.length} account(s), ${report.scopes.length} scopes. No bank writes.`);
-  console.log(report.signingConfigured ? 'Signing is configured; server acceptance still needs a signed test.' : 'Signed payment tests need the sandbox public keys uploaded and API Key UID configured.');
-  console.log(`Report: ${path.join(home, 'preflight.json')}`);
+  if (mode === 'token') {
+    const token = readFileSync(0, 'utf8').trim();
+    if (!token || /\s/.test(token)) throw new Error('Supply one simulator token via hidden input/stdin.');
+    // Simulator OAuth scopes allow this explicit fixture assignment; production PATs stay separate.
+    config.auth = { accountToken: token, paymentToken: token };
+    saveConfig(configFile, config); return;
+  }
+  if (mode === 'key') { config.signing.keyUid = process.env.STARLING_SANDBOX_KEY_UID; saveConfig(configFile, config); return; }
+  if (mode !== 'check') throw new Error('Use setup, token, key or check.');
+  const liveFile = path.join(root, '.local', 'config.json');
+  const auth = existsSync(liveFile) ? JSON.parse(readFileSync(liveFile, 'utf8')).auth ?? {} : {};
+  assertSandboxToken(config.auth.accountToken ?? '', [auth.accountToken, auth.paymentToken].filter(Boolean));
+  const report = await command(['doctor', '--json']);
+  if (!report.data.capabilities.account.ready) throw new Error('Sandbox account access is not ready.');
+  console.log(`Sandbox ${profile}: account authentication passed. No bank writes.`);
 }
-
 run().catch((e) => { console.error(e.message); process.exitCode = 1; });

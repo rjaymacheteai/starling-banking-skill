@@ -1,7 +1,7 @@
 import { resolveAccount } from './accounts.mjs';
 import { getOperation } from './catalogue.mjs';
 import { CliError } from './errors.mjs';
-import { formatMoney, limitToMinor } from './money.mjs';
+import { formatMoney } from './money.mjs';
 import { suppliedRecipientName } from './payee-names.mjs';
 
 // Starling's documented pattern for payment references; FPS (GBP) allows 18 characters, SEPA 35.
@@ -27,8 +27,8 @@ export function describePayeeAccount(payee, account) {
 }
 
 // Everything that moves money out passes through here, from `pay` and from the generic
-// `call` command alike, so no route skips the limits, the allowlist or the payee check.
-async function paymentGuard(ctx, request, { excludePlan } = {}) {
+// `call` command alike, so no route skips recipient/amount/reference validation.
+async function paymentGuard(ctx, request) {
   const { pathParams, body } = request;
   if (!body || typeof body !== 'object') throw new CliError('MISSING_BODY', 'A payment needs a request body.');
   if (body.paymentRecipient) {
@@ -55,47 +55,12 @@ async function paymentGuard(ctx, request, { excludePlan } = {}) {
     });
   }
 
-  const { perPayment, perDay, currency } = ctx.config.limits;
-  if (perPayment == null || perDay == null) {
-    throw new CliError('LIMITS_NOT_SET', 'Payments are enabled but spending limits are not set.', {
-      hint: `Set limits.perPayment and limits.perDay in ${ctx.configFile}. Run \`doctor\` for help.`,
-    });
-  }
-  if (amount.currency !== currency) {
-    throw new CliError('CURRENCY_NOT_COVERED', `Your spending limits are in ${currency}, but this payment is in ${amount.currency}.`, {
-      hint: `Only ${currency} payments can be made until limits.currency matches.`,
-    });
-  }
-  const perPaymentMinor = limitToMinor(perPayment);
-  const perDayMinor = limitToMinor(perDay);
-  if (amount.minorUnits > perPaymentMinor) {
-    throw new CliError('LIMIT_EXCEEDED', `${formatMoney(amount.minorUnits, currency)} is over your per-payment limit of ${formatMoney(perPaymentMinor, currency)}.`, {
-      hint: 'The user can raise limits.perPayment in config.json themselves. Do not change it on their behalf unless they explicitly ask.',
-    });
-  }
-  const spent = ctx.ledger.spentToday(currency, new Date(), { excludePlan });
-  if (spent + amount.minorUnits > perDayMinor) {
-    throw new CliError('LIMIT_EXCEEDED', `This would take today's total to ${formatMoney(spent + amount.minorUnits, currency)}, over your daily limit of ${formatMoney(perDayMinor, currency)} (already sent today: ${formatMoney(spent, currency)}).`, {
-      hint: 'The limit resets at midnight local time, or the user can raise limits.perDay in config.json.',
-    });
-  }
-
   const payees = await fetchPayees(ctx);
   const payee = payees.find((p) => p.accounts?.some((a) => a.payeeAccountUid === body.destinationPayeeAccountUid));
   if (!payee) {
     throw new CliError('PAYEE_NOT_FOUND', 'That payee account is not one of your registered payees.', { hint: 'Run `payees list` to see who you can pay.' });
   }
   const payeeAccount = payee.accounts.find((a) => a.payeeAccountUid === body.destinationPayeeAccountUid);
-  const allowed = ctx.config.allowedPayees;
-  if (allowed.length) {
-    const ok = allowed.some((x) => x === payee.payeeUid || x.toLowerCase() === payee.payeeName.toLowerCase());
-    if (!ok) {
-      throw new CliError('PAYEE_NOT_ALLOWED', `${payee.payeeName} is not in your allowedPayees list.`, {
-        hint: 'Payments are restricted to the payees named in config.json. The user can add this payee there if they want to allow it.',
-      });
-    }
-  }
-
   const account = await resolveAccount(ctx, pathParams.accountUid);
   if (account.currency !== amount.currency) {
     throw new CliError('CURRENCY_MISMATCH', `Account "${account.name}" is in ${account.currency}, but the payment is in ${amount.currency}.`);
@@ -112,7 +77,6 @@ async function paymentGuard(ctx, request, { excludePlan } = {}) {
       recipientAccount: describePayeeAccount(payee, payeeAccount),
       reference: body.reference,
       fromAccount: `${account.name} (${account.currency})`,
-      limits: { perPayment: formatMoney(perPaymentMinor, currency), perDay: formatMoney(perDayMinor, currency), sentToday: formatMoney(spent, currency), remainingToday: formatMoney(perDayMinor - spent, currency) },
     },
     meta: { kind: 'payment', amountMinor: amount.minorUnits, currency: amount.currency, payeeUid: payee.payeeUid },
   };
@@ -126,7 +90,7 @@ const GUARDS = {
 
 function unsupportedStandingOrder() {
   throw new CliError('UNSUPPORTED_OPERATION', 'Standing-order creation and updates are not supported by this skill.', {
-    hint: 'Use the Starling app for recurring payments. This skill does not enforce spending limits on future recurring executions. Listing and cancelling existing standing orders are supported.',
+    hint: 'Use the Starling app for recurring payments; this skill supports only listing and cancelling existing standing orders.',
   });
 }
 

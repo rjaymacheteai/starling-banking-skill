@@ -9,8 +9,5 @@ export function sandboxPaths(root, profile = 'default') {
   return {
     home,
     configFile: path.join(home, 'config.json'),
-    tokenFile: path.join(home, 'access-token'),
-    refreshTokenFile: path.join(home, 'refresh-token'),
-    keyDir: path.join(sandboxRoot, 'keys'),
   };
 }

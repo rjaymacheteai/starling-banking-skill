@@ -11,7 +11,6 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const home = path.join(root, '.local');
 const cli = path.join(root, 'scripts/starling-banking.mjs');
 const reportFile = path.join(home, 'live-check.json');
-const snapshot = path.join(home, 'live-check.config.json');
 const exec = promisify(execFile);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const report = { startedAt: new Date().toISOString(), environment: 'live', bankWrites: false, checks: [] };
@@ -28,17 +27,7 @@ async function main() {
   delete env.STARLING_BANKING_TEST_BASE_URL;
   const { config } = loadConfig(env);
   if (config.environment !== 'live') throw new Error('This check needs a live token and environment: "live". Your config was left unchanged.');
-  // This helper issues only read commands; token scopes are enforced by Starling.
-  const readConfig = {
-    ...config,
-    auth: { ...config.auth, account: { ...config.auth.account, tokenFile: path.join(home, 'access-token') }, payments: { tokenEnv: 'STARLING_LIVE_CHECK_UNUSED_PAYMENT_TOKEN', tokenFile: null } },
-    signing: { keyUid: null, keyFile: null, algorithm: 'auto' },
-  };
-  writeFileSync(snapshot, JSON.stringify(readConfig, null, 2) + '\n', { mode: 0o600 });
-  env.STARLING_BANKING_CONFIG = snapshot;
-  if (!existsSync(readConfig.auth.account.tokenFile) || !statSync(readConfig.auth.account.tokenFile).size) {
-    throw new Error('No local token saved. Run npm run test:live in your terminal.');
-  }
+  if (!config.auth.accountToken) throw new Error('Fill auth.accountToken in .local/config.json locally.');
 
   const exportFile = path.join(home, `live-transactions-${Date.now()}.csv`);
   const cases = [

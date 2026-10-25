@@ -1,5 +1,15 @@
 # Validation recorded in this repository
 
+## Unreleased changes after v0.2.0
+
+**138 deterministic tests passed** for the single secret config, API-only generation,
+public-key derivation, required signing UID, token routing, no local spending/recipient
+filters, preserved exact approvals, replay handling and bank scope checks. Tests also
+verify owner-only config creation and that malformed JSON never echoes secret snippets.
+No paid model eval or real bank test was run for this changed structure. Historical
+results below describe their tagged versions, not the current config/key workflow.
+
+
 ## v0.2.0 — 25 October 2026
 
 | Check | Result |

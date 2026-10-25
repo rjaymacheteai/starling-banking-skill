@@ -1,5 +1,8 @@
 # Agent smoke evaluation — v0.2.0
 
+Historical evidence for the `v0.2.0` tag. Unreleased single-config/API-only changes
+have deterministic validation but have not been rerun against models.
+
 **Passed: 5/5 cases, 63/63 required checks.** Recorded 25 October 2026 with
 `gpt-5.6-luna`, low reasoning, one pass and concurrency 1. [Aggregate evidence](agent-eval-results-v0.2.0.json)
 records the evaluated SKILL.md hash, token usage and check counts.

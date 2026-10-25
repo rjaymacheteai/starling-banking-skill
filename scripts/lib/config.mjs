@@ -1,197 +1,107 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, mkdirSync, writeFileSync, chmodSync } from 'node:fs';
+import path from 'node:path';
 import { CliError } from './errors.mjs';
 import { parseJsonc } from './jsonc.mjs';
-import { configPath, expandHome } from './paths.mjs';
+import { configPath } from './paths.mjs';
 import { registerSecret } from './redact.mjs';
 
 export const ALGORITHMS = ['auto', 'rsa-sha256', 'rsa-sha512', 'ecdsa-sha256', 'ecdsa-sha512'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 export const DEFAULTS = Object.freeze({
   environment: 'live',
-  auth: { account: { tokenEnv: 'STARLING_ACCESS_TOKEN', tokenFile: null }, payments: { tokenEnv: 'STARLING_PAYMENT_ACCESS_TOKEN', tokenFile: null } },
-  signing: { keyUid: null, keyFile: null, algorithm: 'auto' },
+  auth: { accountToken: null, paymentToken: null },
+  signing: { keyUid: null, privateKey: null, algorithm: 'auto' },
   defaultAccountUid: null,
-  limits: { currency: 'GBP', perPayment: null, perDay: null },
-  allowedPayees: [],
   confirmation: { mode: 'agent', expiresMinutes: 10 },
 });
 
-const SECTION_KEYS = {
-  '': Object.keys(DEFAULTS),
-  auth: [...Object.keys(DEFAULTS.auth), 'tokenEnv', 'tokenFile'],
-  'auth.account': Object.keys(DEFAULTS.auth.account),
-  'auth.payments': Object.keys(DEFAULTS.auth.payments),
-  signing: Object.keys(DEFAULTS.signing),
-  limits: Object.keys(DEFAULTS.limits),
-  confirmation: Object.keys(DEFAULTS.confirmation),
-};
-
-function isObject(v) {
-  return v && typeof v === 'object' && !Array.isArray(v);
+function registerCredentials(raw) {
+  for (const value of [raw?.auth?.accountToken, raw?.auth?.paymentToken, raw?.signing?.privateKey]) {
+    if (typeof value === 'string' && value.trim()) {
+      registerSecret(value.trim());
+      if (value.includes('PRIVATE KEY')) registerSecret(value.replace(/-----[A-Z ]+-----/g, '').replace(/\s+/g, ''));
+    }
+  }
 }
-
-// Returns { config, errors, warnings }. Errors make the config unusable; warnings
-// (such as an unknown key, usually a typo) are reported by `doctor`.
 export function validateConfig(raw) {
-  const errors = [];
-  const warnings = [];
-  const input = isObject(raw) ? raw : {};
-  if (!isObject(raw)) errors.push('The config must be a JSON object.');
-
-  for (const [section, keys] of Object.entries(SECTION_KEYS)) {
-    const obj = section ? section.split('.').reduce((o, k) => o?.[k], input) : input;
-    if (!isObject(obj)) continue;
-    for (const k of Object.keys(obj)) {
-      if (!keys.includes(k) && !(section === '' && k === 'permissions')) {
-        warnings.push(`Unknown setting "${section ? section + '.' : ''}${k}" is ignored. Valid settings here: ${keys.join(', ')}.`);
-      }
+  registerCredentials(raw);
+  const errors = [], warnings = [], config = structuredClone(DEFAULTS);
+  const object = (v) => v && typeof v === 'object' && !Array.isArray(v);
+  if (!object(raw)) return { config, errors: ['The config must be a JSON object.'], warnings };
+  for (const section of ['', 'auth', 'signing', 'confirmation']) {
+    const value = section ? raw[section] : raw;
+    if (value === undefined) continue;
+    if (!object(value)) { errors.push(`"${section}" must be an object.`); continue; }
+    const defaults = section ? DEFAULTS[section] : DEFAULTS;
+    for (const key of Object.keys(value)) if (!(key in defaults)) errors.push(`Unsupported setting "${section ? section + '.' : ''}${key}". Use the single-file structure in config.json.example; token sources, limits and recipient filters are no longer supported.`);
+  }
+  if (raw.environment !== undefined) {
+    if (!['live', 'sandbox'].includes(raw.environment)) errors.push('"environment" must be "live" or "sandbox".');
+    else config.environment = raw.environment;
+  }
+  for (const [section, keys] of [['auth', ['accountToken', 'paymentToken']], ['signing', ['privateKey']]]) {
+    for (const key of keys) {
+      const v = raw[section]?.[key];
+      if (v === undefined) continue;
+      if (v === null || typeof v === 'string') config[section][key] = typeof v === 'string' ? v.trim() || null : null;
+      else errors.push(`"${section}.${key}" must be text or null.`);
     }
   }
-
-  const config = structuredClone(DEFAULTS);
-
-  if (input.environment !== undefined) {
-    if (!['live', 'sandbox'].includes(input.environment)) errors.push('"environment" must be "live" or "sandbox".');
-    else config.environment = input.environment;
+  if (raw.signing?.keyUid !== undefined) {
+    const v = raw.signing.keyUid;
+    if (v === null || (typeof v === 'string' && UUID.test(v))) config.signing.keyUid = v;
+    else errors.push('"signing.keyUid" must be the API public key UID from Starling (a UUID) or null.');
   }
-
-  if (input.permissions !== undefined) errors.push('"permissions" was removed in 0.2.0. Remove that field after reviewing your Starling token scopes; those scopes now control available capabilities.');
-
-  const str = (section, key, { nullable = true } = {}) => {
-    const v = input[section]?.[key];
-    if (v === undefined) return;
-    if ((v === null && nullable) || typeof v === 'string') config[section][key] = v;
-    else errors.push(`"${section}.${key}" must be text${nullable ? ' or null' : ''}.`);
-  };
-  if (input.auth !== undefined && !isObject(input.auth)) errors.push('"auth" must be an object.');
-  if (isObject(input.auth)) {
-    const legacy = input.auth.tokenEnv !== undefined || input.auth.tokenFile !== undefined;
-    if (legacy && input.auth.account !== undefined) errors.push('Use either auth.account or legacy auth.tokenEnv/tokenFile, not both.');
-    for (const role of ['account', 'payments']) {
-      const source = role === 'account' && legacy ? input.auth : input.auth[role];
-      if (source === undefined) continue;
-      if (!isObject(source)) { errors.push(`"auth.${role}" must be an object.`); continue; }
-      for (const key of ['tokenEnv', 'tokenFile']) {
-        const value = source[key];
-        if (value === undefined) continue;
-        if (key === 'tokenFile' && value === null) config.auth[role][key] = null;
-        else if (typeof value === 'string' && value.trim()) config.auth[role][key] = value;
-        else errors.push(`"auth.${role}.${key}" must be non-empty text${key === 'tokenFile' ? ' or null' : ''}.`);
-      }
-    }
+  if (raw.signing?.algorithm !== undefined) {
+    if (ALGORITHMS.includes(raw.signing.algorithm)) config.signing.algorithm = raw.signing.algorithm;
+    else errors.push('"signing.algorithm" is unsupported; normally use "auto".');
   }
-  if (isObject(input.signing)) {
-    const s = input.signing;
-    if (s.keyUid !== undefined) {
-      if (s.keyUid === null || (typeof s.keyUid === 'string' && UUID.test(s.keyUid))) config.signing.keyUid = s.keyUid;
-      else errors.push('"signing.keyUid" must be the Key Uid from the Starling developer portal (a UUID like aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa) or null.');
-    }
-    str('signing', 'keyFile');
-    if (s.algorithm !== undefined) {
-      if (ALGORITHMS.includes(s.algorithm)) config.signing.algorithm = s.algorithm;
-      else errors.push(`"signing.algorithm" must be one of: ${ALGORITHMS.join(', ')}.`);
-    }
+  if (raw.defaultAccountUid !== undefined) {
+    if (raw.defaultAccountUid === null || (typeof raw.defaultAccountUid === 'string' && UUID.test(raw.defaultAccountUid))) config.defaultAccountUid = raw.defaultAccountUid;
+    else errors.push('"defaultAccountUid" must be an account UID or null.');
   }
-
-  if (input.defaultAccountUid !== undefined) {
-    if (input.defaultAccountUid === null || (typeof input.defaultAccountUid === 'string' && UUID.test(input.defaultAccountUid))) {
-      config.defaultAccountUid = input.defaultAccountUid;
-    } else errors.push('"defaultAccountUid" must be an account UID (from `accounts list`) or null.');
+  if (raw.confirmation?.mode !== undefined) {
+    if (['agent', 'terminal'].includes(raw.confirmation.mode)) config.confirmation.mode = raw.confirmation.mode;
+    else errors.push('"confirmation.mode" must be "agent" or "terminal".');
   }
-
-  if (isObject(input.limits)) {
-    const l = input.limits;
-    if (l.currency !== undefined) {
-      if (typeof l.currency === 'string' && /^[A-Z]{3}$/.test(l.currency)) config.limits.currency = l.currency;
-      else errors.push('"limits.currency" must be a 3-letter code in capitals, e.g. "GBP".');
-    }
-    for (const k of ['perPayment', 'perDay']) {
-      if (l[k] === undefined) continue;
-      if (l[k] === null || (typeof l[k] === 'number' && Number.isFinite(l[k]) && l[k] > 0)) config.limits[k] = l[k];
-      else errors.push(`"limits.${k}" must be a number above zero (in pounds, e.g. 25 or 25.50) or null.`);
-    }
-    if (config.limits.perPayment != null && config.limits.perDay != null && config.limits.perPayment > config.limits.perDay) {
-      warnings.push('"limits.perPayment" is higher than "limits.perDay", so the daily limit will always apply first.');
-    }
+  if (raw.confirmation?.expiresMinutes !== undefined) {
+    const v = raw.confirmation.expiresMinutes;
+    if (Number.isInteger(v) && v >= 1 && v <= 60) config.confirmation.expiresMinutes = v;
+    else errors.push('"confirmation.expiresMinutes" must be an integer from 1 to 60.');
   }
-
-  if (input.allowedPayees !== undefined) {
-    if (Array.isArray(input.allowedPayees) && input.allowedPayees.every((p) => typeof p === 'string')) {
-      config.allowedPayees = input.allowedPayees;
-    } else errors.push('"allowedPayees" must be a list of payee names or payee UIDs.');
-  }
-
-  if (isObject(input.confirmation)) {
-    const c = input.confirmation;
-    if (c.mode !== undefined) {
-      if (['agent', 'terminal'].includes(c.mode)) config.confirmation.mode = c.mode;
-      else errors.push('"confirmation.mode" must be "agent" or "terminal".');
-    }
-    if (c.expiresMinutes !== undefined) {
-      if (Number.isInteger(c.expiresMinutes) && c.expiresMinutes >= 1 && c.expiresMinutes <= 60) config.confirmation.expiresMinutes = c.expiresMinutes;
-      else errors.push('"confirmation.expiresMinutes" must be a whole number from 1 to 60.');
-    }
-  }
-
   return { config, errors, warnings };
 }
 
-// Loads config.json or defaults; Starling token scopes determine available capabilities.
 export function loadConfig(env = process.env) {
-  const file = configPath(env);
+  const file = configPath(env), found = existsSync(file);
   let raw = {};
-  let found = false;
-  if (existsSync(file)) {
-    found = true;
-    try {
-      raw = parseJsonc(readFileSync(file, 'utf8'));
-    } catch (e) {
-      throw new CliError('CONFIG_INVALID', `Could not read ${file}: ${e.message}`, {
-        hint: 'Fix the JSON syntax (comments are allowed). Compare with config.json.example in the skill folder.',
-      });
-    }
+  if (found) {
+    try { raw = parseJsonc(readFileSync(file, 'utf8')); }
+    catch { throw new CliError('CONFIG_INVALID', `Could not parse ${file}.`, { hint: 'Fix the JSON locally using config.json.example. Do not paste this secret file into chat.' }); }
   }
   const { config, errors, warnings } = validateConfig(raw);
-  if (errors.length) {
-    throw new CliError('CONFIG_INVALID', `Problems in ${file}:\n- ${errors.join('\n- ')}`, {
-      hint: 'Fix these settings, then run `doctor` to re-check. Compare with config.json.example.',
-      details: { errors },
-    });
-  }
+  if (errors.length) throw new CliError('CONFIG_INVALID', `Problems in ${file}:\n- ${errors.join('\n- ')}`, { hint: 'Update the local file to config.json.example; never send its contents to the agent.' });
   return { config, file, found, warnings };
 }
 
-export function loadToken(config, env = process.env, role = 'account') {
+export function saveConfig(file, config) {
+  mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+  writeFileSync(file, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
+  if (process.platform !== 'win32') chmodSync(file, 0o600);
+}
+
+export function loadToken(config, _env = process.env, role = 'account') {
   const payment = role === 'payments';
-  const auth = config.auth[role];
-  const code = payment ? 'NO_PAYMENT_TOKEN' : 'NO_TOKEN';
-  const label = payment ? 'optional payment access token' : 'required Starling account access token';
-  const hint = payment
-    ? 'To send payments, set STARLING_PAYMENT_ACCESS_TOKEN locally or auth.payments.tokenFile. Account access still works without it. Never paste tokens into chat. Run `doctor` after setup.'
-    : 'Set STARLING_ACCESS_TOKEN locally or auth.account.tokenFile, then run `doctor`. Never paste tokens into chat. STARLING_PAYMENT_ACCESS_TOKEN is optional and only used to initiate payments.';
-  let token, source;
-  if (auth.tokenFile) {
-    const file = expandHome(auth.tokenFile);
-    try { token = readFileSync(file, 'utf8').trim(); }
-    catch { throw new CliError(code, `Cannot read the ${label} file: ${file}`, { hint }); }
-    source = `file ${file}`;
-  } else {
-    token = env[auth.tokenEnv]?.trim();
-    source = `environment variable ${auth.tokenEnv}`;
-  }
-  if (!token) throw new CliError(code, `No ${label} found (looked in ${source}).`, { hint });
+  const token = config.auth[payment ? 'paymentToken' : 'accountToken'];
+  if (!token) throw new CliError(payment ? 'NO_PAYMENT_TOKEN' : 'NO_TOKEN', payment ? 'Optional payment access token is not configured.' : 'Required Starling account access token is missing.', {
+    hint: payment ? 'Add auth.paymentToken to your local config.json only if you want payments. Account access still works without it. Never paste tokens into chat.' : 'Run `init` if needed, then fill auth.accountToken in your local config.json. The payment token is optional. Never paste tokens into chat.',
+  });
   registerSecret(token);
-  return { token, source };
+  return { token, source: payment ? 'config.json auth.paymentToken' : 'config.json auth.accountToken' };
 }
 
 export function fileModeWarning(file) {
   if (process.platform === 'win32') return null;
-  try {
-    const mode = statSync(file).mode & 0o777;
-    if (mode & 0o077) return `${file} is readable by other users (mode ${mode.toString(8)}). Run: chmod 600 ${file}`;
-  } catch {
-    /* missing files are reported elsewhere */
-  }
+  try { const mode = statSync(file).mode & 0o777; if (mode & 0o077) return `${file} is readable by other users (mode ${mode.toString(8)}). Run: chmod 600 ${file}`; } catch {}
   return null;
 }

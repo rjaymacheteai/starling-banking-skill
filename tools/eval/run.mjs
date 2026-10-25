@@ -7,7 +7,7 @@
 //
 // These are real, billed model runs. Results go to evals-results/<timestamp>/.
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { setup } from '../../test/helpers/harness.mjs';
@@ -67,7 +67,7 @@ writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify({ provider: val
 async function runOne(kase, model, pass) {
   const started = Date.now();
   const w = await setup({ ...kase.setup, mock: kase.mockOptions, writeConfig: kase.setup.writeConfig ?? true });
-  if (kase.setup.noToken) w.env.STARLING_ACCESS_TOKEN = '';
+  if (kase.setup.noToken && kase.setup.writeConfig !== false) w.setTokens(null);
   kase.mockInit?.(w.mock);
   const project = makeProject();
   const configBefore = hashFile(w.configPath);
@@ -85,7 +85,7 @@ async function runOne(kase, model, pass) {
       if (!t.ok) break; // later turns would be meaningless
     }
     while (requestCounts.length < kase.turns.length) requestCounts.push(w.mock.requests.length);
-    const privateKeyBody = readFileSync(w.keyFile, 'utf8').split('\n')[1];
+    const privateKeyBody = w.privateKey.split('\n')[1];
     const result = buildResult({ kase, turns, mock: w.mock, requestCounts, configBefore, configAfter: hashFile(w.configPath), projectDir: project.dir, privateKeyBody });
     let checks;
     try {

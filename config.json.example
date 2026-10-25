@@ -1,26 +1,15 @@
-// Starling banking skill: configuration
-// Run `init` to copy this outside the skill folder. Settings: references/configuration.md
-// Keep tokens and private keys in separate protected files or environment variables.
 {
   "environment": "live",
   "auth": {
-    "account": { "tokenEnv": "STARLING_ACCESS_TOKEN", "tokenFile": null },
-    "payments": { "tokenEnv": "STARLING_PAYMENT_ACCESS_TOKEN", "tokenFile": null }
+    "accountToken": null,
+    "paymentToken": null
   },
-  // Required for signed operations; upload the public key to Starling first.
   "signing": {
     "keyUid": null,
-    "keyFile": null,
+    "privateKey": null,
     "algorithm": "auto"
   },
   "defaultAccountUid": null,
-  // Payments remain blocked until both positive limits are set (major currency units).
-  "limits": {
-    "currency": "GBP",
-    "perPayment": null,
-    "perDay": null
-  },
-  "allowedPayees": [],
   "confirmation": {
     "mode": "agent",
     "expiresMinutes": 10

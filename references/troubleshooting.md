@@ -7,35 +7,32 @@ Errors print as `{"status":"error","error":{"code","message","hint","details?"}}
 | Code | Meaning and fix |
 |---|---|
 | `NODE_TOO_OLD` | Node.js older than 18. Install the current LTS from nodejs.org. |
-| `NO_TOKEN` | Required account token missing. Set `STARLING_ACCESS_TOKEN` or `auth.account.tokenFile` locally. The payment token is optional and cannot replace it. See [setup](setup.md). |
-| `NO_PAYMENT_TOKEN` | Account access can still work. To initiate payments, add `STARLING_PAYMENT_ACCESS_TOKEN` or `auth.payments.tokenFile` locally; no fallback is used. |
+| `NO_TOKEN` | Required account token missing. Fill `auth.accountToken` in local config.json. The payment token is optional and cannot replace it. See [setup](setup.md). |
+| `NO_PAYMENT_TOKEN` | Account access can still work. To initiate payments, fill `auth.paymentToken` in local config.json; no fallback is used. |
 | `PAYMENT_AUTH_FAILED` | Starling rejected the optional payment token; replace that slot locally and rerun `doctor`. |
 | `PAYMENT_TOKEN_MISMATCH`, `PAYMENT_IDENTITY_UNVERIFIED` | Payment and account holder identities differ or cannot be verified. Correct the payment slot; no payment was initiated. |
 | `PAYMENT_SCOPE_MISSING` | Optional payment token lacks `pay-local:create`. Replace it with a correctly scoped token. |
 | `AUTH_FAILED` | Starling rejected the token: revoked, mistyped, or a sandbox token used on live (or the reverse). Create a new token. |
-| `CONFIG_INVALID` | `config.json` has a syntax error, bad value or obsolete `permissions` field; the message lists each problem. Compare with `config.json.example`. |
+| `CONFIG_INVALID` | `config.json` has a syntax error, bad value or unsupported old setting; the message lists each problem. Compare with `config.json.example`. |
 | `FORBIDDEN` | The token lacks a scope the operation needs. The hint lists them. |
 | `NETWORK_ERROR` | Couldn't reach Starling. For writes, the request might still have been received: check before retrying. |
 | `RATE_LIMITED` | Personal tokens: 5 requests/second, 1,000/day. Wait and make fewer calls. |
 
-## Signing (payments, email/address changes)
+## Signing (payments, email/address changes, standing-order cancellation)
 
 | Code | Meaning and fix |
 |---|---|
-| `SIGNING_NOT_CONFIGURED` | `signing.keyUid` or `signing.keyFile` missing. Run `keys generate`, upload the public key, set both. |
-| `SIGNING_KEY_MISSING`, `SIGNING_KEY_INVALID` | Key file not found, encrypted, wrong type, or not RSA 2048/4096 or ECDSA P-256. |
+| `SIGNING_NOT_CONFIGURED` | `signing.keyUid` or `signing.privateKey` missing. Run `keys generate`, upload the public key, set both. |
+| `SIGNING_KEY_INVALID` | Embedded private key invalid, encrypted, wrong type, or not RSA 2048/4096 or ECDSA P-256. |
 | `SIGNATURE_REJECTED` | Starling refused the signature: wrong Key Uid, the uploaded public key doesn't pair with the private key, or the computer's clock is more than 5 seconds off. Run `doctor`. |
 
 ## Payments and confirmations
 
 | Code | Meaning and fix |
 |---|---|
-| `LIMITS_NOT_SET` | Payments are on but `limits.perPayment` / `limits.perDay` aren't set. |
-| `LIMIT_EXCEEDED` | Over the per-payment or daily limit. Only the user should change limits. |
-| `CURRENCY_NOT_COVERED`, `CURRENCY_MISMATCH` | Limits or account are in a different currency from the payment. |
+| `CURRENCY_MISMATCH` | Source account currency differs from the payment. |
 | `BAD_AMOUNT`, `BAD_REFERENCE`, `REFERENCE_TOO_LONG` | Invalid amount or reference (GBP: 18 characters). |
 | `PAYEE_NOT_FOUND`, `AMBIGUOUS_PAYEE`, `AMBIGUOUS_PAYEE_ACCOUNT`, `PAYEE_HAS_NO_BANK_ACCOUNT` | Can't pick exactly one recipient; the details list the candidates. Ask the user. |
-| `PAYEE_NOT_ALLOWED` | Not in `allowedPayees`. |
 | `RECIPIENT_NOT_REGISTERED` | Payments to arbitrary account details are not allowed; register the payee first. |
 | `PLAN_NOT_FOUND`, `PLAN_EXPIRED`, `BAD_CODE` | Unknown, expired or malformed confirmation code. Prepare the action again. |
 | `PLAN_TAMPERED` | The saved action was altered after the preview; it was discarded. |

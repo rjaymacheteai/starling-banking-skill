@@ -21,7 +21,7 @@ const queries = JSON.parse(readFileSync(new URL('./trigger-queries.json', import
 function triggered(query, model, project) {
   const args = ['-p', query, '--model', model, '--output-format', 'stream-json', '--verbose', '--setting-sources', 'project', '--strict-mcp-config', '--tools', 'Bash,Read,Glob,Grep,Skill', '--permission-mode', 'dontAsk', '--allowedTools', 'Bash,Read,Glob,Grep,Skill', '--max-budget-usd', '1'];
   return new Promise((resolve) => {
-    const child = spawn('claude', args, { cwd: project, env: { ...process.env, STARLING_ACCESS_TOKEN: '' }, stdio: ['ignore', 'pipe', 'ignore'] });
+    const child = spawn('claude', args, { cwd: project, env: { PATH: process.env.PATH, HOME: process.env.HOME }, stdio: ['ignore', 'pipe', 'ignore'] });
     let buf = '';
     let decided = false;
     const finish = (value, how) => {

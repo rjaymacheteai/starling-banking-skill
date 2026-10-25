@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, test } from 'node:test';
-import { IDS, PAYMENT_TOKEN, PAYMENT_LIMITS, setup } from './helpers/harness.mjs';
+import { IDS, PAYMENT_TOKEN, setup } from './helpers/harness.mjs';
 
 let w;
 afterEach(async () => {
@@ -15,7 +15,7 @@ const paymentPuts = () => w.mock.callsTo('makeLocalPayment');
 const planFile = (code) => path.join(w.home, 'state', 'plans', `${code}.json`);
 
 async function payments(options = {}) {
-  w = await setup({ limits: PAYMENT_LIMITS, signing: true, ...options });
+  w = await setup({ signing: true, ...options });
   return w;
 }
 
@@ -101,48 +101,23 @@ describe('preview, confirm, and what gets sent', () => {
   });
 });
 
-describe('guards that stop a bad payment before it is previewed', () => {
-  test('payments need explicit limits', async () => {
-    await payments({ limits: undefined, paymentToken: PAYMENT_TOKEN });
-    const r = await w.run(...payJohn());
-    assert.equal(r.error.code, 'LIMITS_NOT_SET');
-    assert.equal(w.mock.writes().length, 0);
-  });
+test('payments have no local amount caps or recipient allowlist, but still need exact approvals', async () => {
+  await payments();
+  const first = await w.run(...payJohn('5000'));
+  assert.equal(first.json.status, 'needs_confirmation');
+  assert.equal((await w.run('confirm', first.json.confirmCode)).exitCode, 0);
+  const second = await w.run('pay', '--payee', 'Jane Doe', '--amount', '1500', '--reference', 'Test');
+  assert.equal(second.json.status, 'needs_confirmation');
+  assert.equal(paymentPuts().length, 1);
+  assert.equal((await w.run('confirm', second.json.confirmCode)).exitCode, 0);
+  assert.equal(paymentPuts().length, 2);
+});
 
+describe('guards that stop a bad payment before it is previewed', () => {
   test('payments need a signing key, and the failure comes before the user is asked to approve', async () => {
     await payments({ signing: false, paymentToken: PAYMENT_TOKEN });
     const r = await w.run(...payJohn());
     assert.equal(r.error.code, 'SIGNING_NOT_CONFIGURED');
-  });
-
-  test('per-payment limit', async () => {
-    await payments();
-    const r = await w.run(...payJohn('50.01'));
-    assert.equal(r.error.code, 'LIMIT_EXCEEDED');
-    assert.match(r.error.message, /£50\.01 is over your per-payment limit of £50\.00/);
-    assert.equal((await w.run(...payJohn('50.00'))).json.status, 'needs_confirmation');
-  });
-
-  test('daily limit counts what was already sent today', async () => {
-    await payments();
-    for (let i = 0; i < 2; i++) {
-      const { json } = await w.run(...payJohn('45'));
-      assert.equal((await w.run('confirm', json.confirmCode)).exitCode, 0);
-    }
-    const third = await w.run(...payJohn('45')); // 90 + 45 > 100
-    assert.equal(third.error.code, 'LIMIT_EXCEEDED');
-    assert.match(third.error.message, /daily limit of £100\.00 \(already sent today: £90\.00\)/);
-    assert.equal((await w.run(...payJohn('10'))).json.status, 'needs_confirmation');
-  });
-
-  test('two previews cannot be used to slip past the daily limit: confirm re-checks', async () => {
-    await payments({ limits: { currency: 'GBP', perPayment: 50, perDay: 60 } });
-    const a = (await w.run(...payJohn('40'))).json;
-    const b = (await w.run(...payJohn('40'))).json; // each is fine alone
-    assert.equal((await w.run('confirm', a.confirmCode)).exitCode, 0);
-    const second = await w.run('confirm', b.confirmCode);
-    assert.equal(second.error.code, 'LIMIT_EXCEEDED');
-    assert.equal(paymentPuts().length, 1);
   });
 
   test('amounts are validated exactly', async () => {
@@ -177,13 +152,6 @@ describe('guards that stop a bad payment before it is previewed', () => {
     assert.equal(w.mock.writes().length, 0);
   });
 
-  test('allowedPayees restricts who can be paid', async () => {
-    await payments({ config: { allowedPayees: ['jane doe'] } });
-    assert.equal((await w.run(...payJohn())).error.code, 'PAYEE_NOT_ALLOWED');
-    const ok = await w.run('pay', '--payee', 'Jane Doe', '--amount', '5', '--reference', 'x');
-    assert.equal(ok.json.status, 'needs_confirmation');
-  });
-
   test('a payee with several accounts and no single default must be disambiguated', async () => {
     const twoAccounts = {
       payeeUid: '33333333-3333-4333-8333-777777777777', payeeName: 'Two Accounts Ltd', payeeType: 'BUSINESS',
@@ -199,21 +167,21 @@ describe('guards that stop a bad payment before it is previewed', () => {
     assert.match(ok.json.summary, /account \*\*\*\*2020/);
   });
 
-  test('the generic call command cannot bypass the payee rules or limits', async () => {
+  test('the generic call command cannot bypass registered-recipient validation', async () => {
     await payments();
     const adHoc = await w.run('call', 'makeLocalPayment', '--body', JSON.stringify({ externalIdentifier: 'abc', reference: 'x', amount: { currency: 'GBP', minorUnits: 100 }, paymentRecipient: { payeeName: 'Mallory', payeeType: 'INDIVIDUAL', countryCode: 'GB', accountIdentifier: '99999999', bankIdentifier: '999999', bankIdentifierType: 'SORT_CODE' } }));
     assert.equal(adHoc.error.code, 'RECIPIENT_NOT_REGISTERED');
     const big = await w.run('call', 'makeLocalPayment', '--body', JSON.stringify({ externalIdentifier: 'abc', reference: 'x', amount: { currency: 'GBP', minorUnits: 600000 }, destinationPayeeAccountUid: IDS.johnAccount }));
-    assert.equal(big.error.code, 'LIMIT_EXCEEDED');
+    assert.equal(big.json.status, 'needs_confirmation');
     const fine = await w.run('call', 'makeLocalPayment', '--body', JSON.stringify({ externalIdentifier: 'abc', reference: 'x', amount: { currency: 'GBP', minorUnits: 600 }, destinationPayeeAccountUid: IDS.johnAccount }));
     assert.equal(fine.json.status, 'needs_confirmation'); // still needs the confirm step
     assert.equal(paymentPuts().length, 0);
   });
 
-  test('currency must match the account and the limits', async () => {
+  test('currency must match the source account', async () => {
     await payments();
     const r = await w.run(...payJohn('5', 'x', '--currency', 'EUR'));
-    assert.equal(r.error.code, 'CURRENCY_NOT_COVERED');
+    assert.equal(r.error.code, 'CURRENCY_MISMATCH');
   });
 });
 
@@ -255,7 +223,7 @@ describe('the confirmation step cannot be abused', () => {
   test('switching between live and sandbox after the preview blocks the confirm', async () => {
     await payments();
     const { json } = await w.run(...payJohn());
-    w.writeConfig({ environment: 'sandbox', limits: PAYMENT_LIMITS, signing: { keyUid: IDS.keyUid, keyFile: w.keyFile } });
+    w.writeConfig({ environment: 'sandbox', signing: { keyUid: IDS.keyUid, privateKey: w.privateKey } });
     assert.equal((await w.run('confirm', json.confirmCode)).error.code, 'ENVIRONMENT_CHANGED');
   });
 
@@ -290,20 +258,9 @@ describe('when things go wrong in flight', () => {
     assert.equal(w.mock.state.paymentsByExternalId.size, 1, 'the bank saw one payment');
   });
 
-  test('an uncertain payment still counts against the daily limit, once', async () => {
-    await payments({ limits: { currency: 'GBP', perPayment: 50, perDay: 60 } });
-    w.mock.state.failures.push({ operationId: 'makeLocalPayment', mode: 'status', status: 503, times: 1 });
-    const { json } = await w.run(...payJohn('40'));
-    assert.equal((await w.run('confirm', json.confirmCode)).error.code, 'SERVER_ERROR');
-    const blocked = await w.run(...payJohn('40')); // 40 may already have left
-    assert.equal(blocked.error.code, 'LIMIT_EXCEEDED');
-    assert.equal((await w.run('confirm', json.confirmCode, '--retry')).exitCode, 0);
-    assert.equal((await w.run(...payJohn('20'))).json.status, 'needs_confirmation'); // 40 + 20 = 60, counted once not twice
-  });
-
-  test('a rejected signature is explained, fails the plan for good, and does not count as spent', async () => {
+  test('a rejected signature is explained, fails the plan for good without automatic resubmission', async () => {
     await payments({ config: { signing: { keyUid: '99999999-9999-4999-8999-999999999999' } } });
-    w.writeConfig({ limits: PAYMENT_LIMITS, signing: { keyUid: '99999999-9999-4999-8999-999999999999', keyFile: w.keyFile } });
+    w.writeConfig({ signing: { keyUid: '99999999-9999-4999-8999-999999999999', privateKey: w.privateKey } });
     const { json } = await w.run(...payJohn('40'));
     const r = await w.run('confirm', json.confirmCode);
     assert.equal(r.error.code, 'SIGNATURE_REJECTED');

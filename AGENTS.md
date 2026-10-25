@@ -9,7 +9,7 @@ for the runtime flow and documentation map.
 
 - Keep the CLI dependency-free and compatible with Node.js 18+.
 - Route banking operations through the bundled CLI and shared engine. Preserve
-  Starling token-scope enforcement, payment limits/allowlists, preview integrity, fresh approval,
+  Starling token-scope enforcement, registered-recipient validation, preview integrity, fresh approval,
   replay protection, redaction and honest unresolved statuses. Generic `call` must
   not bypass these controls. Read SKILL.md before changing banking behaviour.
 - Keep credentials/config/state outside the installed skill. Never read out,
@@ -18,7 +18,7 @@ for the runtime flow and documentation map.
   by default. Live calls, sandbox mutations and paid model evals need explicit
   user authorisation for that work. Never run a model matrix as a routine check.
 - Do not install the skill into any agent host unless the user requests installation.
-- Keep README as the user entry point. Put settings in `references/configuration.md`,
+- Keep README as the user entry point. Keep decisions/risks/backlog in `references/decisions-and-limitations.md`. Put single-file settings in `references/configuration.md`,
   onboarding in `references/setup.md`, and agent workflow in SKILL.md. Keep the
   config example concise. Update validation records only with actual evidence;
   distinguish tests passed, tests blocked and operations not validated.

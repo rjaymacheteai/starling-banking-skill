@@ -25,17 +25,13 @@ async function run() {
   const env = {
     ...process.env,
     STARLING_BANKING_HOME: home,
-    STARLING_BANKING_CONFIG: path.join(home, isPayment ? 'payments.config.json' : 'payees.config.json'),
+    STARLING_BANKING_CONFIG: path.join(home, 'config.json'),
   };
   delete env.STARLING_BANKING_TEST_BASE_URL;
   const { config, found } = loadConfig(env);
   if (!found || config.environment !== 'live' || config.confirmation.mode !== 'terminal') {
     throw new Error('A live config with terminal confirmation is required.');
   }
-  if (isPayment && (config.limits.perPayment !== 0.01 || ![0.01, 0.02, 0.03].includes(config.limits.perDay))) {
-    throw new Error('Live payment tests require a £0.01 per-payment cap and a daily cap no higher than £0.03.');
-  }
-
   async function command(args) {
     const result = await main(args, env);
     let json;

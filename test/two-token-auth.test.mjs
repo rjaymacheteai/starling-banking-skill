@@ -2,19 +2,19 @@ import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, test } from 'node:test';
-import { setup, IDS, TOKEN, PAYMENT_TOKEN, PAYMENT_LIMITS } from './helpers/harness.mjs';
+import { setup, IDS, TOKEN, PAYMENT_TOKEN } from './helpers/harness.mjs';
 import { DEFAULTS, validateConfig } from '../scripts/lib/config.mjs';
 
 let w;
 afterEach(async () => { await w?.cleanup(); w = null; });
 const pay = ['pay', '--payee', 'John Smith', '--amount', '1', '--reference', 'Routing'];
-const options = { signing: true, limits: PAYMENT_LIMITS };
+const options = { signing: true, };
 const bearer = (q) => q.headers.authorization.replace(/^Bearer /, '').split(';')[0];
 
 for (const [account, payment] of [[false, false], [true, false], [false, true], [true, true]]) {
   test(`token matrix account=${account}, payment=${payment}`, async () => {
     w = await setup({ ...options, paymentToken: payment ? PAYMENT_TOKEN : '' });
-    if (!account) delete w.env.STARLING_ACCESS_TOKEN;
+    if (!account) w.setTokens(null);
     const d = await w.run('doctor', '--json');
     assert.equal(d.data.ok, account);
     assert.equal(d.data.capabilities.account.ready, account);
@@ -27,7 +27,7 @@ for (const [account, payment] of [[false, false], [true, false], [false, true], 
       assert.equal(w.mock.requests.length, 0, 'payment-only token must not substitute for the required account token');
     } else if (!payment) {
       assert.equal(p.error.code, 'NO_PAYMENT_TOKEN');
-      assert.match(p.error.hint, /STARLING_PAYMENT_ACCESS_TOKEN/);
+      assert.match(p.error.hint, /auth.paymentToken/);
       assert.equal(w.mock.callsTo('makeLocalPayment').length, 0);
     } else {
       assert.equal(p.json.status, 'needs_confirmation');
@@ -64,10 +64,10 @@ test('generic payment operation and repeat confirmation route correctly without 
 test('removing payment token between preview and confirmation blocks submission but keeps the plan usable', async () => {
   w = await setup(options);
   const p = await w.run(...pay);
-  delete w.env.STARLING_PAYMENT_ACCESS_TOKEN;
+  w.setTokens(TOKEN, null);
   assert.equal((await w.run('confirm', p.json.confirmCode)).error.code, 'NO_PAYMENT_TOKEN');
   assert.equal(w.mock.callsTo('makeLocalPayment').length, 0);
-  w.env.STARLING_PAYMENT_ACCESS_TOKEN = PAYMENT_TOKEN;
+  w.setTokens(TOKEN, PAYMENT_TOKEN);
   assert.equal((await w.run('confirm', p.json.confirmCode)).exitCode, 0);
 });
 
@@ -92,32 +92,35 @@ for (const [name, credential, expected] of [
   });
 }
 
-test('both token-file sources take precedence over environment values', async () => {
+test('credentials come only from the single config, never environment or token files', async () => {
   w = await setup(options);
-  const accountFile = path.join(w.home, 'account.token');
-  const paymentFile = path.join(w.home, 'payment.token');
-  writeFileSync(accountFile, TOKEN, { mode: 0o600 });
-  writeFileSync(paymentFile, PAYMENT_TOKEN, { mode: 0o600 });
-  w.writeConfig({ ...JSON.parse((await import('node:fs')).readFileSync(w.configPath)), auth: { account: { tokenFile: accountFile }, payments: { tokenFile: paymentFile } } });
-  w.env.STARLING_ACCESS_TOKEN = 'wrong-account';
-  w.env.STARLING_PAYMENT_ACCESS_TOKEN = 'wrong-payment';
+  w.setTokens(null, null);
+  w.env.STARLING_ACCESS_TOKEN = TOKEN;
+  w.env.STARLING_PAYMENT_ACCESS_TOKEN = PAYMENT_TOKEN;
+  assert.equal((await w.run('accounts', 'balance')).error.code, 'NO_TOKEN');
+  assert.equal(w.mock.requests.length, 0);
+  w.setTokens(TOKEN, PAYMENT_TOKEN);
+  w.env.STARLING_ACCESS_TOKEN = 'wrong';
   assert.equal((await w.run('doctor', '--json')).data.capabilities.payments.ready, true);
-  const p = await w.run(...pay);
-  assert.equal((await w.run('confirm', p.json.confirmCode)).exitCode, 0);
 });
 
-test('legacy account source is accepted; ambiguous or malformed nested sources are rejected', () => {
-  const legacy = validateConfig({ auth: { tokenEnv: 'MY_ACCOUNT', tokenFile: '/private/account.token' } });
-  assert.equal(legacy.config.auth.account.tokenEnv, 'MY_ACCOUNT');
-  assert.equal(legacy.config.auth.account.tokenFile, '/private/account.token');
-  assert.deepEqual(legacy.config.auth.payments, DEFAULTS.auth.payments);
-  for (const auth of [{ account: null }, { payments: [] }, { payments: { tokenEnv: '' } }, { account: {}, tokenEnv: 'OTHER' }]) assert.ok(validateConfig({ auth }).errors.length);
+test('legacy credential sources and removed filters are rejected with migration guidance', () => {
+  for (const raw of [{ auth: { tokenFile: '/private/token' } }, { auth: { account: { tokenEnv: 'TOKEN' } } }, { limits: {} }, { allowedPayees: [] }]) assert.ok(validateConfig(raw).errors.length);
 });
 
 test('rejected required account token never uses the optional token as fallback', async () => {
   w = await setup(options);
-  w.env.STARLING_ACCESS_TOKEN = 'wrongAccountSecret99';
+  w.setTokens('wrongAccountSecret99');
   assert.equal((await w.run(...pay)).error.code, 'AUTH_FAILED');
   assert.equal(w.mock.callsTo('makeLocalPayment').length, 0);
   assert.ok(w.mock.requests.every((q) => bearer(q) !== PAYMENT_TOKEN));
+});
+
+test('private API key without its registered UID cannot prepare signed actions; reads still work', async () => {
+  w = await setup(options);
+  w.writeConfig({ signing: { keyUid: null, privateKey: w.privateKey }, });
+  assert.equal((await w.run('accounts', 'balance')).exitCode, 0);
+  assert.equal((await w.run(...pay)).error.code, 'SIGNING_NOT_CONFIGURED');
+  assert.equal((await w.run('call', 'updateEmail', '--body', '{"email":"test@example.test"}')).error.code, 'SIGNING_NOT_CONFIGURED');
+  assert.equal(w.mock.writes().length, 0);
 });

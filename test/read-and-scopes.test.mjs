@@ -11,11 +11,11 @@ afterEach(async () => {
 });
 
 describe('read-only use', () => {
-  test('works with no config file at all: safe defaults, just a token', async () => {
+  test('without config, bank access stops with local setup guidance', async () => {
     w = await setup({ writeConfig: false });
     const r = await w.run('accounts', 'list');
-    assert.equal(r.exitCode, 0);
-    assert.equal(r.data.accounts[0].name, 'Personal');
+    assert.equal(r.error.code, 'NO_TOKEN');
+    assert.equal(w.mock.requests.length, 0);
 
   });
 
@@ -183,7 +183,7 @@ describe('Starling scopes and operation discovery', () => {
     writeFileSync(w.configPath, '{ "permissions": ["view", "everything"], }');
     const r = await w.run('accounts', 'list');
     assert.equal(r.error.code, 'CONFIG_INVALID');
-    assert.match(r.error.message, /removed in 0.2.0/);
+    assert.match(r.error.message, /Unsupported setting/);
     writeFileSync(w.configPath, '{ not json');
     assert.equal((await w.run('accounts', 'list')).error.code, 'CONFIG_INVALID');
   });
@@ -192,7 +192,7 @@ describe('Starling scopes and operation discovery', () => {
 describe('errors and secrets', () => {
   test('no token: clear instruction, and no request is made', async () => {
     w = await setup();
-    delete w.env.STARLING_ACCESS_TOKEN;
+    w.setTokens(null);
     const r = await w.run('accounts', 'list');
     assert.equal(r.error.code, 'NO_TOKEN');
     assert.match(r.error.hint, /Never paste tokens into chat/);
@@ -201,7 +201,7 @@ describe('errors and secrets', () => {
 
   test('a rejected token is explained, and the token never appears in the output', async () => {
     w = await setup();
-    w.env.STARLING_ACCESS_TOKEN = TOKEN + 'WRONG'; // the mock echoes whatever token it was given in its 401 body
+    w.setTokens(TOKEN + 'WRONG'); // the mock echoes whatever token it was given in its 401 body
     const r = await w.run('accounts', 'list');
     assert.equal(r.error.code, 'AUTH_FAILED');
     assert.ok(!r.stdout.includes('WRONG'), 'echoed token must be redacted');
@@ -214,12 +214,9 @@ describe('errors and secrets', () => {
     assert.match(r.error.hint, /balance:read/);
   });
 
-  test('token can come from a file instead of the environment', async () => {
+  test('the config supplies tokens without environment variables', async () => {
     w = await setup();
-    const tokenFile = path.join(w.home, 'token.txt');
-    writeFileSync(tokenFile, TOKEN + '\n', { mode: 0o600 });
-    delete w.env.STARLING_ACCESS_TOKEN;
-    w.writeConfig({ auth: { tokenFile } });
+    assert.equal(w.env.STARLING_ACCESS_TOKEN, undefined);
     assert.equal((await w.run('accounts', 'list')).exitCode, 0);
   });
 

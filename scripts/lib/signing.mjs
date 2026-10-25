@@ -1,8 +1,6 @@
 import crypto from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
 import { ALGORITHMS } from './config.mjs';
 import { CliError } from './errors.mjs';
-import { expandHome } from './paths.mjs';
 import { registerSecret } from './redact.mjs';
 
 // Message signing as documented at https://developer.starlingbank.com/docs
@@ -13,28 +11,14 @@ import { registerSecret } from './redact.mjs';
 const HASH = { 'rsa-sha256': 'sha256', 'rsa-sha512': 'sha512', 'ecdsa-sha256': 'sha256', 'ecdsa-sha512': 'sha512' };
 
 export function loadSigner(config) {
-  const { keyUid, keyFile } = config.signing;
-  if (!keyUid || !keyFile) {
-    throw new CliError('SIGNING_NOT_CONFIGURED', 'This operation needs a signing key, but none is configured.', {
-      hint: 'Create a key pair (`keys generate`), upload the public key in the Starling developer portal, then set signing.keyUid and signing.keyFile in config.json. Run `doctor` for guided setup.',
-    });
-  }
-  const file = expandHome(keyFile);
-  if (!existsSync(file)) {
-    throw new CliError('SIGNING_KEY_MISSING', `Signing key file not found: ${file}`, { hint: 'Check signing.keyFile in config.json.' });
-  }
-  const pem = readFileSync(file, 'utf8');
+  const { keyUid, privateKey: pem } = config.signing;
+  if (!keyUid || !pem) throw new CliError('SIGNING_NOT_CONFIGURED', 'This action needs an API signing key and its registered Key UID.', { hint: 'Run `keys generate` for requested setup, register the public key, then fill signing.keyUid in local config.json. The private key stays in signing.privateKey; never paste it into chat.' });
   registerSecret(pem.replace(/-----[A-Z ]+-----/g, '').replace(/\s+/g, ''));
   let key;
-  try {
-    key = crypto.createPrivateKey(pem);
-  } catch (e) {
-    throw new CliError('SIGNING_KEY_INVALID', `Could not read the signing key at ${file}: ${e.message}`, {
-      hint: 'It must be an unencrypted PEM private key (RSA 2048/4096 or ECDSA P-256), e.g. created with `keys generate` or openssl genpkey.',
-    });
-  }
+  try { key = crypto.createPrivateKey(pem); }
+  catch { throw new CliError('SIGNING_KEY_INVALID', 'signing.privateKey is not a valid unencrypted PEM private key.', { hint: 'Use an RSA 2048/4096 or ECDSA P-256 private key in local config.json.' }); }
   const algorithm = resolveAlgorithm(key, config.signing.algorithm);
-  return { keyUid, key, algorithm, keyFile: file };
+  return { keyUid, key, algorithm };
 }
 
 export function resolveAlgorithm(key, requested = 'auto') {

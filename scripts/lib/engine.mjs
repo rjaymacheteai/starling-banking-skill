@@ -10,7 +10,7 @@ const PREFIX = { payments: 'pay', payees: 'payee', 'account-settings': 'acct' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Shared execution/confirmation boundary. Starling enforces token scopes; local
-// payment limits, recipient restrictions and confirmation plans remain mandatory.
+// recipient validation and confirmation plans remain mandatory.
 function genericSummary(op, request) {
   const target = op.path.replace(/\{(\w+)\}/g, (_, k) => request.pathParams[k] ?? `{${k}}`);
   const body = request.body === undefined ? '' : `\nRequest values:\n${JSON.stringify(request.body, null, 2)}`;
@@ -121,7 +121,7 @@ export async function confirmPlan(ctx, code, { retry = false } = {}) {
   void ctx.client; // required account credential, including before an unsigned write preview
   if (op.operationId === 'makeLocalPayment') await ctx.client.ensurePayment();
   const guard = guardFor(op.operationId);
-  if (guard) await guard(ctx, plan.request, { excludePlan: plan.code }); // limits may have changed since the preview
+  if (guard) await guard(ctx, plan.request); // revalidate the exact recipient, amount and account
   if (ctx.config.confirmation.mode === 'terminal') await askInTerminal(ctx, plan);
 
   plan.status = 'executing';

@@ -43,11 +43,11 @@ test('the shipped example preserves view-only runtime defaults', () => {
 });
 
 test('config validation reports errors and rejects obsolete local permission switches', () => {
-  const bad = validateConfig({ limits: { perPayment: -5 }, environment: 'prod', signing: { keyUid: 'nope' }, confirmation: { mode: 'chat' }, tpyo: 1 });
+  const bad = validateConfig({ environment: 'prod', signing: { keyUid: 'nope' }, confirmation: { mode: 'chat' }, tpyo: 1 });
   assert.equal(bad.errors.length, 4);
-  assert.ok(validateConfig({ permissions: ['view'] }).errors.some((e) => /removed in 0.2.0/.test(e)));
+  assert.ok(validateConfig({ permissions: ['view'] }).errors.some((e) => /Unsupported setting/.test(e)));
   assert.match(bad.errors.join('\n'), /"environment" must be "live" or "sandbox"/);
-  assert.match(bad.warnings.join('\n'), /Unknown setting "tpyo"/);
+  assert.match(bad.errors.join('\n'), /Unsupported setting "tpyo"/);
   assert.equal('permissions' in validateConfig({}).config, false);
 });
 
@@ -134,6 +134,7 @@ for (const type of ['rsa', 'ec']) {
     assert.equal(h.Digest, digestOf(body));
     const m = h.Authorization.match(/^Bearer TOK;Signature keyid="([^"]+)",algorithm="([^"]+)",headers="\(request-target\) Date Digest",signature="([^"]+)"$/);
     assert.ok(m, h.Authorization);
+    assert.equal(m[1], signer.keyUid, 'Signed requests identify the registered public API key');
     const text = signingString({ method: 'PUT', target: '/x', date: h.Date, digest: h.Digest });
     assert.equal(crypto.verify(algorithm.endsWith('512') ? 'sha512' : 'sha256', Buffer.from(text), { key: publicKey, dsaEncoding: 'der' }, Buffer.from(m[3], 'base64')), true);
     // Changing anything breaks it.

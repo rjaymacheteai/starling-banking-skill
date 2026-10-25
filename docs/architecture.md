@@ -4,13 +4,14 @@
 
 Repository agent workflow and the release checklist live in [AGENTS.md](../AGENTS.md).
 
-- [README](../README.md): user starting point, capabilities, limits and installation.
+- [README](../README.md): user starting point, setup and installation.
 - [SKILL.md](../SKILL.md): agent execution boundary, authentication preflight,
   exact read-back/approval rules and interpretation of bank results.
 - [Setup](../references/setup.md): credential and signing onboarding.
-- [Configuration](../references/configuration.md): authoritative settings/path reference.
+- [Configuration](../references/configuration.md): authoritative single-file credential/settings reference.
 - [Bank scopes](../references/scopes.md): token capabilities enforced by Starling.
 - [Commands](../references/commands.md) and [troubleshooting](../references/troubleshooting.md): invocation and recovery references.
+- [Decision log](../references/decisions-and-limitations.md): current decisions, risks, limitations and future work.
 - [Validation](validation.md): recorded evidence, dates and limitations; detailed reports remain separate.
 
 Keep config comments short. Explain settings in the configuration reference and
@@ -26,8 +27,8 @@ Agent follows SKILL.md
   → commands: resolve account/recipient and construct supported operation
   → engine.mjs: preserve exact previews and confirmation plans
       → immediate operation, or
-      → guards.mjs: validate payment/recipient/limits → state.mjs: save preview
-      → confirm: recheck token identity/scope, environment and limits and preview integrity
+      → guards.mjs: validate registered recipient/amount/reference → state.mjs: save preview
+      → confirm: recheck token identity/scope, environment and preview integrity
   → auth.mjs: verify payment scope and matching holder before preview/confirmation
   → client.mjs / signing.mjs: authenticate, sign where required, send to Starling
   → state.mjs: record writes; return result and any bank approval requirement
@@ -40,11 +41,10 @@ creation/update is explicitly blocked. `doctor` uses read-only diagnostic reques
 and a local signing self-test; it does not submit a test payment.
 
 There are three distinct controls: agent instructions govern user intent and fresh
-approval; CLI guards enforce credential routing, limits and confirmation plans; Starling
+approval; CLI guards enforce credential routing, recipient validation and confirmation plans; Starling
 enforces token scopes and bank approval. Card/organise/savings writes can execute
 without a CLI plan. Savings movement still requires fresh approval under SKILL.md.
-An unrestricted shell agent can alter local files, so local controls are not an
-isolation boundary against that agent. Daily limits cover local records only.
+Risk rationale and unsupported scope are maintained in the [decision log](../references/decisions-and-limitations.md).
 
 ## Packaging and private state
 
@@ -56,7 +56,7 @@ The custom release archive contains only the allowlisted runtime files; GitHub
 source archives and Git-based installs can contain the full tagged repository.
 Pushing `main` does not change a previously published tag or release asset.
 
-External config, credentials, keys and state survive skill upgrades. `.local/`,
+The external config contains all credentials and the optional API private key; it and local state survive upgrades. `.local/`,
 raw eval results and `dist/` are ignored; never commit bank data or secrets.
 See [configuration](../references/configuration.md) for path selection.
 

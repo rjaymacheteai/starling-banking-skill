@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
-import { setup, IDS, PAYMENT_LIMITS } from './helpers/harness.mjs';
+import { setup, IDS } from './helpers/harness.mjs';
 
 let w;
 afterEach(async () => { await w?.cleanup(); w = null; });
@@ -151,7 +151,7 @@ test('recipient name update is denied by bank token scopes after a confirmed pre
 });
 
 test('payment preview displays both the label and supplied recipient name without claiming a name match', async () => {
-  w = await setup({ limits: PAYMENT_LIMITS, signing: true });
+  w = await setup({ signing: true });
   Object.assign(w.mock.state.payees.find((p) => p.payeeUid === IDS.jane), { firstName: 'Jane', lastName: 'Registered' });
   const preview = await w.run('pay', '--payee', IDS.jane, '--amount', '0.01', '--reference', 'Test');
   assert.match(preview.json.summary, /Jane Doe/);
