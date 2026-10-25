@@ -1,15 +1,15 @@
 {
   "environment": "live",
   "auth": {
-    "accountToken": null,
-    "paymentToken": null
+    "accountToken": null, // Required: your account access token; enter locally, never in chat.
+    "paymentToken": null // Optional: separate token for payment initiation.
   },
   "signing": {
-    "keyUid": null,
-    "privateKey": null,
+    "keyUid": null, // For signed actions: API Key UID from Starling, not the client ID.
+    "privateKey": null, // For signed actions: keys generate fills this private PEM key.
     "algorithm": "auto"
   },
-  "defaultAccountUid": null,
+  "defaultAccountUid": null, // Optional: account UID from accounts list; leave null to resolve/ask.
   "confirmation": {
     "mode": "agent",
     "expiresMinutes": 10

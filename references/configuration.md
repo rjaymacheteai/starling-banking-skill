@@ -1,6 +1,7 @@
 # One local config.json
 
-`init` creates the private file outside the skill directory. It never overwrites an
+`init` creates the private file outside the skill directory. `//` comments are supported;
+the example marks required and optional credential/ID fields. It never overwrites an
 existing file. Tokens and the API private key are stored directly in this file;
 credential environment variables, token files and key-file paths are not supported.
 
