@@ -6,6 +6,10 @@
 public-key derivation, required signing UID, token routing, no local spending/recipient
 filters, preserved exact approvals, replay handling and bank scope checks. Tests also
 verify owner-only config creation and that malformed JSON never echoes secret snippets.
+A subsequent documentation review checked 18 documentation files, 64 local links/anchors,
+all 44 CLI help routes, config field/default parity and the README JSON example.
+Installed-skill references are self-contained; stale retry/overwrite/signing guidance
+was corrected and old bank-validation reports explicitly marked historical.
 No paid model eval or real bank test was run for this changed structure. Historical
 results below describe their tagged versions, not the current config/key workflow.
 

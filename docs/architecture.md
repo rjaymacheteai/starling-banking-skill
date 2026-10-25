@@ -23,7 +23,8 @@ update it only when new checks have actually run.
 ```text
 Agent follows SKILL.md
   → scripts/starling-banking.mjs / lib/cli.mjs
-  → context.mjs: validate external config; auth.mjs: require account token, route initiation to optional payment token
+  → context.mjs: validate the single private config
+  → auth.mjs: require account token; route initiation to optional payment token
   → commands: resolve account/recipient and construct supported operation
   → engine.mjs: preserve exact previews and confirmation plans
       → immediate operation, or
@@ -56,8 +57,8 @@ The custom release archive contains only the allowlisted runtime files; GitHub
 source archives and Git-based installs can contain the full tagged repository.
 Pushing `main` does not change a previously published tag or release asset.
 
-The external config contains all credentials and the optional API private key; it and local state survive upgrades. `.local/`,
-raw eval results and `dist/` are ignored; never commit bank data or secrets.
+The external config contains both tokens and the optional API private key; it and
+local state survive upgrades. `.local/`, raw eval results and `dist/` are ignored; never commit bank data or secrets.
 See [configuration](../references/configuration.md) for path selection.
 
 ## Developer checks

@@ -1,5 +1,11 @@
 # Sandbox validation — 24 October 2026
 
+Historical evidence from the implementation tested on this date, not current setup
+instructions. Permission switches, caps, token/key files and helper behaviour described
+below may have since changed. Use [current setup](../references/setup.md) and the
+[decision log](../references/decisions-and-limitations.md) for today's behaviour.
+
+
 These checks used Starling's actual Public API sandbox, with two individual
 customers, one joint customer and one business customer. No model evals were run.
 The results concern API/CLI behaviour, not whether an agent follows the skill.

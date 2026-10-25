@@ -36,8 +36,7 @@ concurrency are deliberate opt-ins. Model evals never run in CI.
 ## Isolation and grading
 
 Each case copies only the distributable allowlist to a temporary project, uses fake
-Starling tokens and an embedded private key in one owner-only config and the local fake bank, and removes the fixtures
-on completion. No skill is installed in a user's Codex/OpenClaw directories.
+Starling tokens and an embedded private key in one owner-only config with the local fake bank. Fixtures are removed on completion. No skill is installed in a user's Codex/OpenClaw directories.
 
 Codex uses temporary home/config/session directories, copies the existing login
 file without displaying it, ignores user config/rules and uses no user plugins or
@@ -53,15 +52,17 @@ output, no blind retries and honest bank-approval wording. New cases cover payee
 updates (applied and awaiting bank approval) and bank-rejected payments.
 
 Ignored `evals-results/` contains manifests, individual runs and summaries. Manifests
-record provider, models, selected cases, effort, limits and skill SHA-256. Keep raw
+record provider, models, selected cases, effort, usage budgets and skill SHA-256. Keep raw
 transcripts private; publish only reviewed aggregate evidence. A small passing run
 is a smoke check, not a reliability guarantee or proof of a specific host's full runtime.
 
-## v0.2.0 token/scope check
+## Focused token/scope selection
 
 Use `--cases tokens-,card-lock-denied-scope --models gpt-5.6-luna --effort low` for
-five focused cases: no tokens, account only, payment only, both tokens with separate
+five focused cases: neither token configured, account token only, payment token only, both tokens with separate
 payee/payment approvals, and a bank-scope denial. Deterministic tests cover rejected
 credentials, missing scopes, mismatched holders and token revocation independently.
 
-Current main uses one secret config and has no spending-limit/allowlist cases. Recorded model runs remain tied to their versioned evidence; no new paid eval is implied by deterministic tests.
+This selection can run against current main, which uses one secret config. Historical
+`v0.2.0` results tested its older structure and do not validate current main; no new
+paid eval is implied by deterministic checks.

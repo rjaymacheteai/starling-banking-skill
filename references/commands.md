@@ -62,10 +62,10 @@ Preview first, then `confirm <code>`:
 | `payees rename <payee> --name …`, `payees delete <payee>` | `payees` |
 | `mandates cancel <uid>` | `account-settings` |
 
-`confirm <code> [--retry]` carries out a prepared action. `cancel <code>` discards one. Codes expire (10 minutes by default), work once, and are bound to exactly what was previewed: if anything differs, `confirm` refuses.
+`confirm <code> [--retry]` carries out a prepared action. `cancel <code>` discards only a still-prepared action; it cannot cancel a bank submission. Codes expire (10 minutes by default), work once, and are bound to exactly what was previewed: if anything differs, `confirm` refuses.
 
-`--retry` exists only for the case where an earlier attempt's outcome is unknown (`PLAN_UNCERTAIN`). Payments reuse the same `externalIdentifier`, which Starling uses to recognise a repeat, but check first anyway.
+`--retry` exists only for the case where an earlier attempt's outcome is unknown (`PLAN_UNCERTAIN`). Payments reuse the same `externalIdentifier`, which Starling uses to recognise a repeat, but inspect status/transactions and obtain the user's explicit retry decision first. Never retry automatically.
 
 ## Amounts and references
 
-Amounts are pounds with at most two decimals (`25`, `25.50`, `£25`). The currency is the account's. A GBP payment reference may be at most 18 characters and use letters, digits and basic punctuation (35 for EUR); the tool rejects rather than truncating, because the recipient sees exactly what is sent.
+Amounts are major units of the source account currency with at most two decimals (`25`, `25.50`, `£25`). The currency is the account's. A GBP payment reference may be at most 18 characters and use letters, digits and basic punctuation (35 for EUR); the tool rejects rather than truncating, because the recipient sees exactly what is sent.

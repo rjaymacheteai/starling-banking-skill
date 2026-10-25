@@ -1,5 +1,11 @@
 # Live personal-account validation — 24 October 2026
 
+Historical evidence from the implementation tested on this date, not current setup
+instructions. Permission switches, caps, token/key files and helper behaviour described
+below may have since changed. Use [current setup](../references/setup.md) and the
+[decision log](../references/decisions-and-limitations.md) for today's behaviour.
+
+
 This was a controlled test against Starling's production Public API using the
 account holder's personal access tokens. No model evals were run.
 

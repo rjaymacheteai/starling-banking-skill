@@ -22,7 +22,7 @@ Errors print as `{"status":"error","error":{"code","message","hint","details?"}}
 
 | Code | Meaning and fix |
 |---|---|
-| `SIGNING_NOT_CONFIGURED` | `signing.keyUid` or `signing.privateKey` missing. Run `keys generate`, upload the public key, set both. |
+| `SIGNING_NOT_CONFIGURED` | `signing.keyUid` or `signing.privateKey` missing. If the key exists, use `keys public` and fill its registered UID locally. If only the UID exists, restore its matching private key locally; never attach a new key to an old UID. Generate a pair only for requested new-key setup; see [setup](setup.md). |
 | `SIGNING_KEY_INVALID` | Embedded private key invalid, encrypted, wrong type, or not RSA 2048/4096 or ECDSA P-256. |
 | `SIGNATURE_REJECTED` | Starling refused the signature: wrong Key Uid, the uploaded public key doesn't pair with the private key, or the computer's clock is more than 5 seconds off. Run `doctor`. |
 
@@ -36,9 +36,9 @@ Errors print as `{"status":"error","error":{"code","message","hint","details?"}}
 | `RECIPIENT_NOT_REGISTERED` | Payments to arbitrary account details are not allowed; register the payee first. |
 | `PLAN_NOT_FOUND`, `PLAN_EXPIRED`, `BAD_CODE` | Unknown, expired or malformed confirmation code. Prepare the action again. |
 | `PLAN_TAMPERED` | The saved action was altered after the preview; it was discarded. |
-| `PLAN_FAILED` | The earlier attempt was refused (nothing sent). Prepare again if still wanted. |
+| `PLAN_FAILED` | The earlier attempt failed or was rejected. Inspect its error; a new preview and approval are needed before another attempt. |
 | `UNSUPPORTED_OPERATION` | This skill does not support that workflow (including standing-order creation/update). Use the supported commands or the Starling app; do not bypass the guard. |
-| `PLAN_UNCERTAIN` | An earlier attempt may or may not have gone through. Check `payments status` or `transactions list --days 2`. Only if it clearly didn't, `confirm <code> --retry`. |
+| `PLAN_UNCERTAIN` | An earlier attempt may or may not have gone through. Check `payments status` or `transactions list --days 2`. Do not retry automatically. After checking the evidence and obtaining an explicit user decision, use the original code with `--retry` when appropriate. |
 | `ENVIRONMENT_CHANGED` | Config switched between live and sandbox after the preview. |
 | `TERMINAL_APPROVAL_REQUIRED` | Config requires typing the code at a terminal. The user runs the `confirm` command themselves. |
 
@@ -49,7 +49,7 @@ Errors print as `{"status":"error","error":{"code","message","hint","details?"}}
 | `AMBIGUOUS_ACCOUNT`, `ACCOUNT_NOT_FOUND`, `NO_ACCOUNTS` | Pass `--account`, or set `defaultAccountUid`. `NO_ACCOUNTS` usually means a missing `account:read` scope. |
 | `MISSING_PARAM`, `BAD_PARAM`, `MISSING_BODY`, `BAD_BODY` | `call` is missing something or was given something invalid. |
 | `UNKNOWN_OPERATION` | Not an operation name; use `ops <search>`. |
-| `FILE_EXISTS` | Output file exists; choose another `--out` or add `--force`. |
+| `FILE_EXISTS` | For exports, choose another `--out` or explicitly allow `--force`. For `init` or key generation, existing config/signing setup is preserved; those commands have no `--force`. |
 | `API_REJECTED`, `BAD_REQUEST` | Starling understood but refused; the message says why. |
 | `NOT_FOUND` | A UID doesn't exist for this token's account. |
 | `SERVER_ERROR` | Starling had a problem. Reads are retried automatically; for writes check before retrying. |

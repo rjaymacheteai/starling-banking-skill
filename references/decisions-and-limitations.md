@@ -24,7 +24,9 @@ upload signature, stop and explain the unsupported step. Existing registered API
 keys can sign requests without a rotation private key at runtime. Replacement API
 registration requires the existing rotation private key under Starling's documented
 flow. No maximum key age is specified: this is controlled replacement, not a fixed
-expiry timer. Do not claim the current generator completes every registration flow.
+expiry timer. A public key/UID cannot recover a lost private key; restore a protected matching
+backup or resolve registration with Starling. Do not claim the current generator
+completes every registration flow.
 
 **R02 — One file contains all credentials.** Compromise of config or its backups can
 expose both access tokens and the signing private key. Keep it outside the skill

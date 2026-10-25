@@ -28,8 +28,9 @@ record the consequences and deferred workflows.
 ## Location and permissions
 
 Default: `~/.config/starling-banking/config.json` on Unix; `%APPDATA%\starling-banking\config.json`
-on Windows. `init` and key generation write mode 600 (directory 700). `doctor` warns
-about insecure file modes. Keep backups private and never paste the file into chat.
+on Windows. On Unix, `init` and key generation write mode 600 and create new parent
+directories with mode 700; existing parent permissions are not reset. `doctor` warns
+about insecure config-file modes. On Windows, restrict access using account/file ACLs. Keep backups private and never paste the file into chat.
 Plans/audit history are separate runtime state under `state/`, not additional config.
 
 For isolated development/alternate locations, `STARLING_BANKING_HOME` changes the runtime

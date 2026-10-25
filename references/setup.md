@@ -31,6 +31,10 @@ For requested setup, run `keys generate` (RSA default, or `--type ecdsa`). It st
 only the private API key in config and displays its public key. Register that public
 key with Starling and put the resulting API Key UID in `signing.keyUid`. You can
 show the public key again with `keys public`; never read the secret config to share it.
+If an existing key only lacks its UID, identify that public key in Starling and fill
+the UID; do not generate a replacement key. If the UID exists but its private key
+is missing, restore the matching key locally from backup; a new key cannot use the
+old UID. If no matching backup exists, follow the deferred-registration guidance below.
 
 If the portal requires a rotation key/upload signature, stop: that workflow is
 currently deferred. See [R01](decisions-and-limitations.md#risks-and-present-limitations).
