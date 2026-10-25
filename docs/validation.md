@@ -1,5 +1,25 @@
 # Validation recorded in this repository
 
+## v0.2.0 — 25 October 2026
+
+| Check | Result |
+|---|---|
+| Deterministic tests | **151 passed**, zero failures; fake bank only |
+| Lightweight agent smoke checks | **5/5 cases, 63/63 required checks**; one Luna model, low reasoning |
+| Token routing | Neither/account-only/payment-only/both; file precedence; no fallback; wrong holder/scope/rejected tokens; token removal/revocation before confirmation |
+| Bank-scope enforcement | Friendly and generic writes denied by actual fake-bank scope checks; no local permission switches |
+| Remaining controls | Exact previews, fresh approval, signing, limits, recipient restrictions, replay/uncertainty protection remain covered |
+| Packaging layout | `endpoints/catalog.json`; same 87 endpoint definitions, descriptive categories instead of local permission groups |
+| Skill format and local documentation links | Passed |
+| Real banking / user-host installation | Not performed for this release |
+
+[Agent evaluation](agent-eval-validation.md) and [aggregate evidence](agent-eval-results-v0.2.0.json)
+record the exact selection, skill hash, usage and limitations. Four earlier token
+cases passed before the scope-removal change and are not counted in the final five.
+Tests caught and corrected a folder-rename regression in key filenames; the complete
+suite then passed, including both key-pair generation paths. Existing configs with
+`permissions` receive an explicit migration error rather than silently losing that restriction.
+
 ## v0.1.1 — 25 October 2026
 
 | Check | Result |

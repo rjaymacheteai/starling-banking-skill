@@ -26,7 +26,6 @@ const save = () => writeFileSync(path.join(runDir, 'report.json'), JSON.stringif
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const liveTokens = ['access-token', 'tokens/read-only.token', 'tokens/payees.token', 'tokens/payments.token']
   .map((f) => path.join(root, '.local', f)).filter(existsSync).map((f) => readFileSync(f, 'utf8'));
-const groups = ['view', 'payees', 'payments', 'savings', 'organise', 'card-controls'];
 class Blocked extends Error {}
 class Skipped extends Error {}
 const contexts = new Map();
@@ -36,16 +35,18 @@ function context(profile) {
   const paths = sandboxPaths(root, profile);
   const env = { ...process.env, STARLING_BANKING_HOME: paths.home, STARLING_BANKING_CONFIG: paths.configFile, STARLING_BANKING_RETRY_DELAY_MS: '0' };
   delete env.STARLING_BANKING_TEST_BASE_URL;
+  delete env.STARLING_PAYMENT_ACCESS_TOKEN;
   const resources = { payees: [], goals: [], notesToRestore: [], pendingApprovals: [] };
   report.resources[profile] = resources;
   const ctx = { profile, paths, env, resources };
-  ctx.call = async (args, permissions = groups) => {
+  ctx.call = async (args) => {
     // Reload and guard each call, including cleanup. Runtime config/state never leave this sandbox customer.
     const base = loadConfig({ ...env, STARLING_BANKING_CONFIG: paths.configFile }).config;
     assertSandboxConfig(base, env, paths.tokenFile);
     assertSandboxToken(readFileSync(paths.tokenFile, 'utf8'), liveTokens);
     const configFile = path.join(paths.home, 'suite.config.json');
-    const config = { ...base, permissions, confirmation: { mode: 'agent', expiresMinutes: 10 }, limits: { currency: 'GBP', perPayment: 1, perDay: 10 } };
+    // Sandbox OAuth fixtures explicitly use their isolated simulator token for both roles.
+    const config = { ...base, auth: { ...base.auth, payments: { ...base.auth.payments, tokenFile: paths.tokenFile } }, confirmation: { mode: 'agent', expiresMinutes: 10 }, limits: { currency: 'GBP', perPayment: 1, perDay: 10 } };
     writeFileSync(configFile, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 });
     await sleep(Math.max(0, 1100 - (Date.now() - lastCall)));
     lastCall = Date.now();
@@ -82,8 +83,8 @@ async function check(ctx, name, fn) {
   return entry.status;
 }
 
-async function expectCode(ctx, args, expected, permissions) {
-  try { await ctx.call(args, permissions); } catch (e) {
+async function expectCode(ctx, args, expected) {
+  try { await ctx.call(args); } catch (e) {
     assert.ok(expected.includes(e.code), `Expected ${expected.join('/')} but got ${e.code}: ${e.message}`);
     return { errorCode: e.code };
   }
@@ -248,7 +249,6 @@ async function payeesAndPayments(ctx, writes, payments) {
       });
     }
     await check(ctx, 'unknown payee is rejected', () => expectCode(ctx, ['payees', 'get', `missing-${randomUUID()}`], ['PAYEE_NOT_FOUND']));
-    await check(ctx, 'payment permission gate', () => expectCode(ctx, ['pay', '--payee', uid ?? 'missing', '--amount', '0.01', '--reference', 'Test'], ['PERMISSION_DISABLED'], ['view']));
     if (uid) {
       await check(ctx, 'per-payment limit enforced before submission', () => expectCode(ctx, ['pay', '--payee', uid, '--amount', '1.01', '--reference', 'Test'], ['LIMIT_EXCEEDED']));
       await check(ctx, 'overlong payment reference is rejected', () => expectCode(ctx, ['pay', '--payee', uid, '--amount', '0.01', '--reference', 'X'.repeat(19)], ['REFERENCE_TOO_LONG']));

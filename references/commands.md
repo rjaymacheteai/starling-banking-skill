@@ -10,14 +10,13 @@ Most commands use the account that is obvious (the only account, or the only PRI
 
 | Command | What it does |
 |---|---|
-| `doctor [--json]` | Checks Node, config, token, network, clock, scopes vs. permissions, accounts, signing key, limits. Says how to fix each problem. |
+| `doctor [--json]` | Checks account access and optional payment readiness separately, including token holder matching, scopes, signing and limits. JSON includes `capabilities.account.ready` / `capabilities.payments.ready`. |
 | `init [--force]` | Copies `config.json.example` to the user's config folder as `config.json`. |
 | `keys generate [--type rsa\|ecdsa] [--dir <folder>]` | Creates the API and rotation key pairs Starling needs for payments. Prints public keys only. Never overwrites. |
-| `permissions` | Lists the permission groups, which are on, and what each allows. |
-| `ops [search] [--group <name>] [--detail]` | Searches the API operations the skill knows about. |
+| `ops [search] [--category <name>] [--detail]` | Searches the API operations the skill knows about. |
 | `log [--limit 20]` | What this skill has sent from this computer (local record). |
 
-## Reading (always available)
+## Reading (requires the corresponding bank scopes)
 
 | Command | Notes |
 |---|---|
@@ -38,13 +37,13 @@ Most commands use the account that is obvious (the only account, or the only PRI
 | `goals list`, `goals get <uid>`, `spaces list` | Savings goals and spaces. |
 | `mandates list`, `mandates get <uid>` | Direct debit mandates. |
 
-Anything not listed: `call <operationId> [--param name=value]… [--query name=value]… [--body '<json>' \| --body-file path] [--account …] [--out file] [--force]`. `call` applies the same permissions, limits and confirmations as everything else. Find names with `ops` or `operations.md`.
+Anything not listed: `call <operationId> [--param name=value]… [--query name=value]… [--body '<json>' \| --body-file path] [--account …] [--out file] [--force]`. `call` applies the same token routing, payment limits and confirmations as everything else. Find names with `ops` or `operations.md`.
 
-## Acting (needs the matching permission group)
+## Acting (requires the corresponding bank scopes)
 
 Run immediately:
 
-| Command | Group |
+| Command | Category |
 |---|---|
 | `transactions note <uid> <text>`, `transactions note <uid> --clear`, `transactions categorise <uid> <CATEGORY>` | `organise` |
 | `cards lock [uid]`, `cards unlock [uid]`, `cards set <atm\|online\|pos\|mobile-wallet\|mag-stripe\|gambling> <on\|off> [--card uid]` | `card-controls` |
@@ -52,7 +51,7 @@ Run immediately:
 
 Preview first, then `confirm <code>`:
 
-| Command | Group |
+| Command | Category |
 |---|---|
 | `pay --payee <name\|uid> --amount 25.00 --reference "text" [--payee-account uid] [--account …]` | `payments` |
 | `payments cancel-standing-order <paymentOrderUid>` | `payments` |

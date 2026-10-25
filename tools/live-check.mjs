@@ -28,16 +28,15 @@ async function main() {
   delete env.STARLING_BANKING_TEST_BASE_URL;
   const { config } = loadConfig(env);
   if (config.environment !== 'live') throw new Error('This check needs a live token and environment: "live". Your config was left unchanged.');
-  // Enforce view-only even if the user's normal config has payments switched on.
+  // This helper issues only read commands; token scopes are enforced by Starling.
   const readConfig = {
     ...config,
-    permissions: ['view'],
-    auth: { ...config.auth, tokenFile: path.join(home, 'access-token') },
+    auth: { ...config.auth, account: { ...config.auth.account, tokenFile: path.join(home, 'access-token') }, payments: { tokenEnv: 'STARLING_LIVE_CHECK_UNUSED_PAYMENT_TOKEN', tokenFile: null } },
     signing: { keyUid: null, keyFile: null, algorithm: 'auto' },
   };
   writeFileSync(snapshot, JSON.stringify(readConfig, null, 2) + '\n', { mode: 0o600 });
   env.STARLING_BANKING_CONFIG = snapshot;
-  if (!existsSync(readConfig.auth.tokenFile) || !statSync(readConfig.auth.tokenFile).size) {
+  if (!existsSync(readConfig.auth.account.tokenFile) || !statSync(readConfig.auth.account.tokenFile).size) {
     throw new Error('No local token saved. Run npm run test:live in your terminal.');
   }
 
@@ -59,7 +58,7 @@ async function main() {
   ];
 
   report.plannedChecks = cases.length;
-  console.log('Checking the live Starling API using view-only permissions. No model calls.');
+  console.log('Checking the live Starling API using read-only commands. No model calls.');
   for (const [index, kase] of cases.entries()) {
     if (index) await sleep(1100); // Keep requests comfortably below the API's rate limit.
     let stdout;

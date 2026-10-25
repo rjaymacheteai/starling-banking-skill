@@ -15,8 +15,8 @@ payee/payment tokens are a separate scope requirement.
 ## Read-only access
 
 1. Link your account on the [Starling developer portal](https://developer.starlingbank.com)
-   and create a personal access token. Start with the read scopes for the commands
-   you need; see [permissions](permissions.md). `account:read`, `balance:read` and
+   and create a personal access token. This is the required account token for everything except payment initiation.
+   Select the non-initiation scopes you need; see [bank scopes](scopes.md). `account:read`, `balance:read` and
    `transaction:read` cover basic account/balance/transaction reads.
 2. Supply the token locally, never in chat. For a temporary Bash/Zsh session:
    ```sh
@@ -27,34 +27,40 @@ payee/payment tokens are a separate scope requirement.
    ```
    The hidden prompt keeps the token out of command text and shell history. The
    CLI must inherit this variable. For persistent use, create an owner-only token
-   file (`chmod 600`) and configure `auth.tokenFile`. A hosted agent can use its
+   file (`chmod 600`) and configure `auth.account.tokenFile`. A hosted agent can use its
    secret settings if they inject the token into the actual execution environment.
 3. Run `starling-banking doctor --json`. Require exit code 0 and `data.ok: true`;
    review warnings and confirm the live/sandbox environment and intended account.
    The diagnostic makes read-only API calls and checks configured signing locally.
 
-A config file is optional for view-only use. To customise settings, run
+A config file is optional; the account token's bank scopes determine access. To customise settings, run
 `starling-banking init`, edit the generated external file, then run `doctor` again.
 See [configuration](configuration.md) for every setting and path override.
 
 ## Enable payments or payee registration
 
-1. Enable only the required groups in your config. `payments` sends to registered
-   recipients; `payees` registers or edits them. They are separate permissions.
-2. Create tokens with the necessary [scopes](permissions.md). A live personal token
+1. Choose the capabilities you want in Starling's token scopes; there are no local
+   capability switches. Give the account token only the non-initiation scopes you need.
+2. Create tokens with the necessary [scopes](scopes.md). A live personal token
    cannot combine `payee:create` with `pay-local:create` or `standing-order:create`.
-   Use separate payee/payment tokens and explicitly select the appropriate source
-   in your config; the CLI never switches tokens automatically. Payment workflows
-   need account/payee reads and `pay-local:create`; add `pay-local:read` and
-   `transaction:read` for status and verification.
+   Keep non-initiation scopes, including `payee:create`, on the account token.
+   Optionally create a separate token with `pay-local:create` for the **same holder**,
+   supply it locally as `STARLING_PAYMENT_ACCESS_TOKEN` or `auth.payments.tokenFile`.
+   The CLI routes automatically; no manual config switching is needed. Keep
+   `pay-local:read`, `payee:read`, `account:read` and `transaction:read` on the account
+   token for lookups/status. Omit the payment token entirely if you do not want payments.
 3. For payments, run `starling-banking keys generate`. Register both generated
    **public** keys in Starling's Personal Access → Keys page (API first, rotation
    second). Keep both private keys local and back up the rotation key. Set
    `signing.keyUid` to the API key UID shown by Starling and `signing.keyFile` to
    its private key path. A public key UID is different from an application client ID.
+   To enter the optional token privately, use the hidden prompt above with
+   `STARLING_PAYMENT_ACCESS_TOKEN` in place of `STARLING_ACCESS_TOKEN`.
 4. Set low positive `limits.perPayment` and `limits.perDay`; optionally restrict
    `allowedPayees`. Run `doctor --json` again. Its local signing test does not prove
-   that Starling has registered the matching public key.
+   that Starling has registered the matching public key. Check
+   `data.capabilities.payments.ready` before initiating a payment; overall `data.ok`
+   covers account setup and may be true without the optional payment token.
 
 The agent must preview the exact payment/payee change and obtain fresh approval
 before confirming. Starling may additionally require approval in its app. See

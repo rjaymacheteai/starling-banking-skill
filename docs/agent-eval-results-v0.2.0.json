@@ -1,0 +1,55 @@
+{
+  "version": "0.2.0",
+  "date": "2026-10-25",
+  "model": "gpt-5.6-luna",
+  "effort": "low",
+  "passes": 1,
+  "skillSha256": "9d20da1494bdae33d9a0643303ca549f50d71047bf6063975f7ee620bc7d8288",
+  "selectedRuns": 5,
+  "passedRuns": 5,
+  "selectedUsage": {
+    "input_tokens": 763869,
+    "cached_input_tokens": 680960,
+    "output_tokens": 6122
+  },
+  "earlierTokenOnlyRunsBeforeScopeRemoval": 4,
+  "earlierUsage": {
+    "input_tokens": 672211,
+    "cached_input_tokens": 597504,
+    "output_tokens": 5423
+  },
+  "costUsd": null,
+  "limits": "Fake-bank smoke checks only; does not revalidate live banking or full agent-host integration. Earlier four token-only cases passed before local permission removal and are excluded from final evidence.",
+  "results": [
+    {
+      "case": "card-lock-denied-scope",
+      "passed": true,
+      "requiredChecksPassed": 10,
+      "requiredChecksTotal": 10
+    },
+    {
+      "case": "tokens-account-only",
+      "passed": true,
+      "requiredChecksPassed": 13,
+      "requiredChecksTotal": 13
+    },
+    {
+      "case": "tokens-both-payee-then-payment",
+      "passed": true,
+      "requiredChecksPassed": 14,
+      "requiredChecksTotal": 14
+    },
+    {
+      "case": "tokens-none",
+      "passed": true,
+      "requiredChecksPassed": 13,
+      "requiredChecksTotal": 13
+    },
+    {
+      "case": "tokens-payment-only",
+      "passed": true,
+      "requiredChecksPassed": 13,
+      "requiredChecksTotal": 13
+    }
+  ]
+}

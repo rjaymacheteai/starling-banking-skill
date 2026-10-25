@@ -3,8 +3,8 @@ import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parseArgs } from '../scripts/lib/args.mjs';
-import { loadCatalogue, scopesSatisfied } from '../scripts/lib/catalogue.mjs';
-import { DEFAULTS, GROUP_NAMES, GROUPS, validateConfig } from '../scripts/lib/config.mjs';
+import { CATEGORY_NAMES, loadCatalogue, scopesSatisfied } from '../scripts/lib/catalogue.mjs';
+import { DEFAULTS, validateConfig } from '../scripts/lib/config.mjs';
 import { parseJsonc } from '../scripts/lib/jsonc.mjs';
 import { formatMoney, parseAmount } from '../scripts/lib/money.mjs';
 import { clearSecrets, redact, registerSecret } from '../scripts/lib/redact.mjs';
@@ -34,7 +34,7 @@ test('the shipped config.json.example parses and validates with no errors', () =
   const { config, errors, warnings } = validateConfig(parseJsonc(readFileSync(EXAMPLE, 'utf8')));
   assert.deepEqual(errors, []);
   assert.deepEqual(warnings, []);
-  assert.deepEqual(config.permissions, ['view']);
+  assert.equal('permissions' in config, false);
 });
 
 test('the shipped example preserves view-only runtime defaults', () => {
@@ -42,14 +42,13 @@ test('the shipped example preserves view-only runtime defaults', () => {
   assert.deepEqual(example, DEFAULTS);
 });
 
-test('config validation gives plain-English errors and always keeps "view" on', () => {
-  const bad = validateConfig({ permissions: ['view', 'sendmoney'], limits: { perPayment: -5 }, environment: 'prod', signing: { keyUid: 'nope' }, confirmation: { mode: 'chat' }, tpyo: 1 });
-  assert.equal(bad.errors.length, 5);
-  assert.match(bad.errors.join('\n'), /Unknown permission "sendmoney"/);
+test('config validation reports errors and rejects obsolete local permission switches', () => {
+  const bad = validateConfig({ limits: { perPayment: -5 }, environment: 'prod', signing: { keyUid: 'nope' }, confirmation: { mode: 'chat' }, tpyo: 1 });
+  assert.equal(bad.errors.length, 4);
+  assert.ok(validateConfig({ permissions: ['view'] }).errors.some((e) => /removed in 0.2.0/.test(e)));
   assert.match(bad.errors.join('\n'), /"environment" must be "live" or "sandbox"/);
   assert.match(bad.warnings.join('\n'), /Unknown setting "tpyo"/);
-  const ok = validateConfig({ permissions: ['payments'] });
-  assert.deepEqual(ok.config.permissions, ['view', 'payments']);
+  assert.equal('permissions' in validateConfig({}).config, false);
 });
 
 test('parseAmount accepts only exact positive pounds-and-pence', () => {
@@ -77,16 +76,16 @@ test('redact removes registered secrets, JWT-shaped tokens, bearer headers and p
   clearSecrets();
 });
 
-test('catalogue: every write operation belongs to a known group and the confirm flags are right', () => {
+test('catalogue: every write operation belongs to a known category and the confirm flags are right', () => {
   const { operations } = loadCatalogue();
   assert.equal(operations.length, loadCatalogue().count);
   for (const o of operations) {
-    assert.ok(GROUP_NAMES.includes(o.group), `${o.operationId} has unknown group ${o.group}`);
-    assert.equal(o.group === 'view', o.method === 'GET', `${o.operationId}: only GETs belong in "view"`);
-    assert.equal(o.confirm, GROUPS[o.group].needsConfirmation, `${o.operationId}: confirm flag disagrees with its group`);
-    if (o.signed) assert.ok(['payments', 'account-settings'].includes(o.group), `${o.operationId}: signed operations must need confirmation`);
+    assert.ok(CATEGORY_NAMES.includes(o.category), `${o.operationId} has unknown category ${o.category}`);
+    assert.equal(o.category === 'view', o.method === 'GET', `${o.operationId}: only GETs belong in "view"`);
+    assert.equal(o.confirm, ['payments', 'payees', 'account-settings'].includes(o.category), `${o.operationId}: confirm flag disagrees with its category`);
+    if (o.signed) assert.ok(['payments', 'account-settings'].includes(o.category), `${o.operationId}: signed operations must need confirmation`);
   }
-  // Money leaving the account can never sit in an unconfirmed group.
+  // Money leaving the account can never sit in an unconfirmed category.
   for (const id of ['makeLocalPayment', 'createStandingOrder', 'updateStandingOrder', 'cancelStandingOrder', 'createPayee', 'createPayeeAccount', 'updatePayee', 'deletePayee']) {
     assert.equal(operations.find((o) => o.operationId === id).confirm, true, id);
   }

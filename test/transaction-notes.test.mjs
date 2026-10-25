@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { setup } from './helpers/harness.mjs';
 
 test('transaction notes can be written, read back and cleared, while conflicting text is rejected', async () => {
-  const w = await setup({ permissions: ['view', 'organise'] });
+  const w = await setup({ });
   try {
     const tx = w.mock.state.feed[0].feedItemUid;
     assert.equal((await w.run('transactions', 'note', tx, 'Temporary note')).exitCode, 0);

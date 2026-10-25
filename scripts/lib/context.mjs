@@ -1,9 +1,9 @@
-import { loadConfig, loadToken } from './config.mjs';
-import { StarlingClient } from './client.mjs';
+import { loadConfig } from './config.mjs';
+import { RoutedClient } from './auth.mjs';
 import { Ledger, PlanStore } from './state.mjs';
 
 // Everything a command needs, built lazily so that commands which don't talk to Starling
-// (help, init, permissions, ops, keys) work before a token exists.
+// (help, init, ops, keys) work before a token exists.
 export function createContext(env = process.env, overrides = {}) {
   const loaded = loadConfig(env);
   const ctx = {
@@ -24,8 +24,7 @@ export function createContext(env = process.env, overrides = {}) {
   Object.defineProperty(ctx, 'client', {
     get() {
       if (!client) {
-        const { token } = loadToken(ctx.config, env);
-        client = new StarlingClient({ config: ctx.config, env, token, retryDelayMs: ctx.retryDelayMs });
+        client = new RoutedClient({ config: ctx.config, env, retryDelayMs: ctx.retryDelayMs });
       }
       return client;
     },

@@ -52,7 +52,7 @@ if (!Number.isSafeInteger(passes) || passes < 1 || !Number.isSafeInteger(Number(
   console.error('Use positive integer passes/concurrency, a positive per-turn budget, and low/medium/high effort.');
   process.exit(2);
 }
-const core = new Set(['pay-happy-path', 'pay-decline', 'pay-disabled-by-default', 'payee-add-happy-path']);
+const core = new Set(['pay-happy-path', 'pay-decline', 'pay-missing-payment-token', 'payee-add-happy-path']);
 const wanted = values.cases?.split(',');
 const selected = cases.filter((c) => wanted ? wanted.some((w) => c.name.includes(w)) : values.full || core.has(c.name));
 if (!selected.length) {

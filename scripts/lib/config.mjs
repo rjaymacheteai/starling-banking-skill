@@ -4,54 +4,12 @@ import { parseJsonc } from './jsonc.mjs';
 import { configPath, expandHome } from './paths.mjs';
 import { registerSecret } from './redact.mjs';
 
-// Permission groups are what the user switches on in config.json. Each one is a
-// plain-English capability, not a number, so the config reads like a sentence.
-export const GROUPS = {
-  view: {
-    title: 'View',
-    summary: 'Read-only: accounts, balances, transactions, payees, cards, savings goals, direct debits.',
-    needsConfirmation: false,
-  },
-  organise: {
-    title: 'Organise',
-    summary: 'Edit transaction notes and categories, add receipts and attachments, change the profile image.',
-    needsConfirmation: false,
-  },
-  'card-controls': {
-    title: 'Card controls',
-    summary: 'Lock or unlock a card and switch ATM, online, contactless, gambling and similar payments on or off.',
-    needsConfirmation: false,
-  },
-  savings: {
-    title: 'Savings',
-    summary: 'Create and edit savings goals, move money between the account and a goal, manage round-up.',
-    needsConfirmation: false,
-  },
-  payees: {
-    title: 'Payees',
-    summary: 'Add, edit or delete the people and businesses you can pay. Adding a payee is the first step to paying someone new.',
-    needsConfirmation: true,
-  },
-  payments: {
-    title: 'Payments',
-    summary: 'Send money to existing payees (and cancel standing orders). Needs spending limits and a signing key.',
-    needsConfirmation: true,
-  },
-  'account-settings': {
-    title: 'Account settings',
-    summary: 'Change email or address, cancel direct debit mandates, log the token out.',
-    needsConfirmation: true,
-  },
-};
-
-export const GROUP_NAMES = Object.keys(GROUPS);
 export const ALGORITHMS = ['auto', 'rsa-sha256', 'rsa-sha512', 'ecdsa-sha256', 'ecdsa-sha512'];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const DEFAULTS = Object.freeze({
   environment: 'live',
-  permissions: ['view'],
-  auth: { tokenEnv: 'STARLING_ACCESS_TOKEN', tokenFile: null },
+  auth: { account: { tokenEnv: 'STARLING_ACCESS_TOKEN', tokenFile: null }, payments: { tokenEnv: 'STARLING_PAYMENT_ACCESS_TOKEN', tokenFile: null } },
   signing: { keyUid: null, keyFile: null, algorithm: 'auto' },
   defaultAccountUid: null,
   limits: { currency: 'GBP', perPayment: null, perDay: null },
@@ -61,7 +19,9 @@ export const DEFAULTS = Object.freeze({
 
 const SECTION_KEYS = {
   '': Object.keys(DEFAULTS),
-  auth: Object.keys(DEFAULTS.auth),
+  auth: [...Object.keys(DEFAULTS.auth), 'tokenEnv', 'tokenFile'],
+  'auth.account': Object.keys(DEFAULTS.auth.account),
+  'auth.payments': Object.keys(DEFAULTS.auth.payments),
   signing: Object.keys(DEFAULTS.signing),
   limits: Object.keys(DEFAULTS.limits),
   confirmation: Object.keys(DEFAULTS.confirmation),
@@ -80,32 +40,23 @@ export function validateConfig(raw) {
   if (!isObject(raw)) errors.push('The config must be a JSON object.');
 
   for (const [section, keys] of Object.entries(SECTION_KEYS)) {
-    const obj = section ? input[section] : input;
+    const obj = section ? section.split('.').reduce((o, k) => o?.[k], input) : input;
     if (!isObject(obj)) continue;
     for (const k of Object.keys(obj)) {
-      if (!keys.includes(k)) {
+      if (!keys.includes(k) && !(section === '' && k === 'permissions')) {
         warnings.push(`Unknown setting "${section ? section + '.' : ''}${k}" is ignored. Valid settings here: ${keys.join(', ')}.`);
       }
     }
   }
 
   const config = structuredClone(DEFAULTS);
-  config.permissions = [...DEFAULTS.permissions];
 
   if (input.environment !== undefined) {
     if (!['live', 'sandbox'].includes(input.environment)) errors.push('"environment" must be "live" or "sandbox".');
     else config.environment = input.environment;
   }
 
-  if (input.permissions !== undefined) {
-    if (!Array.isArray(input.permissions) || input.permissions.some((p) => typeof p !== 'string')) {
-      errors.push(`"permissions" must be a list of names from: ${GROUP_NAMES.join(', ')}.`);
-    } else {
-      const unknown = input.permissions.filter((p) => !GROUP_NAMES.includes(p));
-      if (unknown.length) errors.push(`Unknown permission ${unknown.map((u) => `"${u}"`).join(', ')}. Valid names: ${GROUP_NAMES.join(', ')}.`);
-      config.permissions = [...new Set(['view', ...input.permissions.filter((p) => GROUP_NAMES.includes(p))])];
-    }
-  }
+  if (input.permissions !== undefined) errors.push('"permissions" was removed in 0.2.0. Remove that field after reviewing your Starling token scopes; those scopes now control available capabilities.');
 
   const str = (section, key, { nullable = true } = {}) => {
     const v = input[section]?.[key];
@@ -113,9 +64,22 @@ export function validateConfig(raw) {
     if ((v === null && nullable) || typeof v === 'string') config[section][key] = v;
     else errors.push(`"${section}.${key}" must be text${nullable ? ' or null' : ''}.`);
   };
+  if (input.auth !== undefined && !isObject(input.auth)) errors.push('"auth" must be an object.');
   if (isObject(input.auth)) {
-    str('auth', 'tokenEnv', { nullable: false });
-    str('auth', 'tokenFile');
+    const legacy = input.auth.tokenEnv !== undefined || input.auth.tokenFile !== undefined;
+    if (legacy && input.auth.account !== undefined) errors.push('Use either auth.account or legacy auth.tokenEnv/tokenFile, not both.');
+    for (const role of ['account', 'payments']) {
+      const source = role === 'account' && legacy ? input.auth : input.auth[role];
+      if (source === undefined) continue;
+      if (!isObject(source)) { errors.push(`"auth.${role}" must be an object.`); continue; }
+      for (const key of ['tokenEnv', 'tokenFile']) {
+        const value = source[key];
+        if (value === undefined) continue;
+        if (key === 'tokenFile' && value === null) config.auth[role][key] = null;
+        else if (typeof value === 'string' && value.trim()) config.auth[role][key] = value;
+        else errors.push(`"auth.${role}.${key}" must be non-empty text${key === 'tokenFile' ? ' or null' : ''}.`);
+      }
+    }
   }
   if (isObject(input.signing)) {
     const s = input.signing;
@@ -173,7 +137,7 @@ export function validateConfig(raw) {
   return { config, errors, warnings };
 }
 
-// Loads config.json (or defaults, so view-only use works with just a token).
+// Loads config.json or defaults; Starling token scopes determine available capabilities.
 export function loadConfig(env = process.env) {
   const file = configPath(env);
   let raw = {};
@@ -198,26 +162,25 @@ export function loadConfig(env = process.env) {
   return { config, file, found, warnings };
 }
 
-export function loadToken(config, env = process.env) {
-  let token;
-  let source;
-  if (config.auth.tokenFile) {
-    const file = expandHome(config.auth.tokenFile);
-    if (!existsSync(file)) {
-      throw new CliError('NO_TOKEN', `Token file not found: ${file}`, { hint: 'Create it with your Starling personal access token, or use an environment variable instead (auth.tokenEnv).' });
-    }
-    token = readFileSync(file, 'utf8').trim();
+export function loadToken(config, env = process.env, role = 'account') {
+  const payment = role === 'payments';
+  const auth = config.auth[role];
+  const code = payment ? 'NO_PAYMENT_TOKEN' : 'NO_TOKEN';
+  const label = payment ? 'optional payment access token' : 'required Starling account access token';
+  const hint = payment
+    ? 'To send payments, set STARLING_PAYMENT_ACCESS_TOKEN locally or auth.payments.tokenFile. Account access still works without it. Never paste tokens into chat. Run `doctor` after setup.'
+    : 'Set STARLING_ACCESS_TOKEN locally or auth.account.tokenFile, then run `doctor`. Never paste tokens into chat. STARLING_PAYMENT_ACCESS_TOKEN is optional and only used to initiate payments.';
+  let token, source;
+  if (auth.tokenFile) {
+    const file = expandHome(auth.tokenFile);
+    try { token = readFileSync(file, 'utf8').trim(); }
+    catch { throw new CliError(code, `Cannot read the ${label} file: ${file}`, { hint }); }
     source = `file ${file}`;
   } else {
-    const name = config.auth.tokenEnv;
-    token = env[name]?.trim();
-    source = `environment variable ${name}`;
+    token = env[auth.tokenEnv]?.trim();
+    source = `environment variable ${auth.tokenEnv}`;
   }
-  if (!token) {
-    throw new CliError('NO_TOKEN', `No Starling access token found (looked in ${config.auth.tokenFile ? 'the token file' : `environment variable ${config.auth.tokenEnv}`}).`, {
-      hint: 'Create a personal access token at https://developer.starlingbank.com (Personal Access), then set it in your shell: export STARLING_ACCESS_TOKEN=... (do not paste it into the chat). Run `doctor` for guided setup.',
-    });
-  }
+  if (!token) throw new CliError(code, `No ${label} found (looked in ${source}).`, { hint });
   registerSecret(token);
   return { token, source };
 }

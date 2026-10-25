@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, test } from 'node:test';
-import { IDS, PAYMENT_LIMITS, setup } from './helpers/harness.mjs';
+import { IDS, PAYMENT_TOKEN, PAYMENT_LIMITS, setup } from './helpers/harness.mjs';
 
 let w;
 afterEach(async () => {
@@ -15,7 +15,7 @@ const paymentPuts = () => w.mock.callsTo('makeLocalPayment');
 const planFile = (code) => path.join(w.home, 'state', 'plans', `${code}.json`);
 
 async function payments(options = {}) {
-  w = await setup({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: true, ...options });
+  w = await setup({ limits: PAYMENT_LIMITS, signing: true, ...options });
   return w;
 }
 
@@ -103,14 +103,14 @@ describe('preview, confirm, and what gets sent', () => {
 
 describe('guards that stop a bad payment before it is previewed', () => {
   test('payments need explicit limits', async () => {
-    await payments({ limits: undefined });
+    await payments({ limits: undefined, paymentToken: PAYMENT_TOKEN });
     const r = await w.run(...payJohn());
     assert.equal(r.error.code, 'LIMITS_NOT_SET');
     assert.equal(w.mock.writes().length, 0);
   });
 
   test('payments need a signing key, and the failure comes before the user is asked to approve', async () => {
-    await payments({ signing: false });
+    await payments({ signing: false, paymentToken: PAYMENT_TOKEN });
     const r = await w.run(...payJohn());
     assert.equal(r.error.code, 'SIGNING_NOT_CONFIGURED');
   });
@@ -244,18 +244,18 @@ describe('the confirmation step cannot be abused', () => {
     assert.equal((await w.run('confirm', 'pay-ABCDEF')).error.code, 'PLAN_NOT_FOUND');
   });
 
-  test('turning payments off after the preview blocks the confirm', async () => {
+  test('revoking the payment initiation scope after preview blocks confirmation', async () => {
     await payments();
     const { json } = await w.run(...payJohn());
-    w.writeConfig({ permissions: ['view'] });
-    assert.equal((await w.run('confirm', json.confirmCode)).error.code, 'PERMISSION_DISABLED');
+    w.mock.state.tokens[PAYMENT_TOKEN].scopes = [];
+    assert.equal((await w.run('confirm', json.confirmCode)).error.code, 'PAYMENT_SCOPE_MISSING');
     assert.equal(paymentPuts().length, 0);
   });
 
   test('switching between live and sandbox after the preview blocks the confirm', async () => {
     await payments();
     const { json } = await w.run(...payJohn());
-    w.writeConfig({ permissions: ['view', 'payments'], environment: 'sandbox', limits: PAYMENT_LIMITS, signing: { keyUid: IDS.keyUid, keyFile: w.keyFile } });
+    w.writeConfig({ environment: 'sandbox', limits: PAYMENT_LIMITS, signing: { keyUid: IDS.keyUid, keyFile: w.keyFile } });
     assert.equal((await w.run('confirm', json.confirmCode)).error.code, 'ENVIRONMENT_CHANGED');
   });
 
@@ -303,7 +303,7 @@ describe('when things go wrong in flight', () => {
 
   test('a rejected signature is explained, fails the plan for good, and does not count as spent', async () => {
     await payments({ config: { signing: { keyUid: '99999999-9999-4999-8999-999999999999' } } });
-    w.writeConfig({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: { keyUid: '99999999-9999-4999-8999-999999999999', keyFile: w.keyFile } });
+    w.writeConfig({ limits: PAYMENT_LIMITS, signing: { keyUid: '99999999-9999-4999-8999-999999999999', keyFile: w.keyFile } });
     const { json } = await w.run(...payJohn('40'));
     const r = await w.run('confirm', json.confirmCode);
     assert.equal(r.error.code, 'SIGNATURE_REJECTED');
@@ -371,7 +371,7 @@ describe('other confirm-gated actions', () => {
   });
 
   test('payees add: preview with warnings, then confirm creates it; the new payee can be listed', async () => {
-    w = await setup({ permissions: ['view', 'payees'] });
+    w = await setup({ });
     const r = await w.run('payees', 'add', '--name', 'John Smith', '--sort-code', '12-34-56', '--account-number', '12345678');
     assert.equal(r.json.status, 'needs_confirmation');
     assert.match(r.json.confirmCode, /^payee-/);
@@ -387,14 +387,14 @@ describe('other confirm-gated actions', () => {
   });
 
   test('payees add validates sort code and account number', async () => {
-    w = await setup({ permissions: ['view', 'payees'] });
+    w = await setup({ });
     assert.equal((await w.run('payees', 'add', '--name', 'X', '--sort-code', '1234', '--account-number', '12345678')).error.code, 'USAGE');
     assert.equal((await w.run('payees', 'add', '--name', 'X', '--sort-code', '123456', '--account-number', '1234')).error.code, 'USAGE');
     assert.equal(w.mock.writes().length, 0);
   });
 
   test('payees delete previews with the payee name; confirm deletes', async () => {
-    w = await setup({ permissions: ['view', 'payees'] });
+    w = await setup({ });
     const { json } = await w.run('payees', 'delete', 'Jane Doe');
     assert.match(json.summary, /Delete payee "Jane Doe"/);
     assert.equal(w.mock.callsTo('deletePayee').length, 0);
@@ -415,7 +415,7 @@ describe('other confirm-gated actions', () => {
   });
 
   test('mandates cancel needs account-settings and a confirm', async () => {
-    w = await setup({ permissions: ['view', 'account-settings'], signing: true });
+    w = await setup({ signing: true });
     const { json } = await w.run('mandates', 'cancel', IDS.mandate);
     assert.match(json.summary, /Gym Ltd/);
     assert.match(json.confirmCode, /^acct-/);

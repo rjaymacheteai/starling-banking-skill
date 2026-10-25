@@ -7,7 +7,7 @@ A token needs **any one** of an operation's scopes. "Signed" operations also nee
 
 ## view (51)
 
-Read-only. Always on.
+Read operations. Starling token scopes apply.
 
 | operationId | method and path | scopes | notes |
 |---|---|---|---|

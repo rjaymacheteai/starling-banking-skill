@@ -27,6 +27,8 @@ export const IDS = {
 
 export const TOKEN = 'eyJhbGciOiJQUzI1NiIsInppcCI6IkdaSVAifQ.H4sIAAQ-testSECRETpart99.abcdEFGHijkl123456';
 
+export const PAYMENT_TOKEN = 'mockPAYMENTsecretSeparate99';
+
 const ukAccount = (uid, desc, acct, sort, def = true) => ({
   payeeAccountUid: uid, payeeChannelType: 'BANK_ACCOUNT', description: desc, defaultAccount: def,
   countryCode: 'GB', accountIdentifier: acct, bankIdentifier: sort, bankIdentifierType: 'SORT_CODE',
@@ -70,6 +72,7 @@ export async function startMock(options = {}) {
   const state = {
     token: TOKEN,
     scopes: options.scopes ?? allScopes,
+    tokens: options.tokens ?? { [PAYMENT_TOKEN]: { scopes: ['pay-local:create'], accountHolderUid: IDS.account } },
     publicKeys: options.publicKeys ?? {}, // keyUid -> PEM
     requests: [],
     clockSkewMs: options.clockSkewMs ?? 0,
@@ -93,7 +96,7 @@ export async function startMock(options = {}) {
   };
 
   const handlers = {
-    getTokenIdentity: () => ({ body: { authenticated: true, scopes: state.scopes, expiresInSeconds: 3600, expiresAt: new Date(Date.now() + 3600000).toISOString(), accountHolderUid: IDS.account } }),
+    getTokenIdentity: ({ credential }) => ({ body: { authenticated: true, scopes: credential.scopes, expiresInSeconds: 3600, expiresAt: new Date(Date.now() + 3600000).toISOString(), accountHolderUid: credential.accountHolderUid } }),
     getAccounts: () => ({ body: { accounts: state.accounts } }),
     getAccountBalance: () => ({ body: { clearedBalance: money(123456), effectiveBalance: money(120000), pendingTransactions: money(0), acceptedOverdraft: money(0), amount: money(120000), totalClearedBalance: money(123456), totalEffectiveBalance: money(120000) } }),
     getAccountIdentifiers: () => ({ body: { accountIdentifier: '99887766', bankIdentifier: '608371', iban: 'GB00SRLG60837199887766', bic: 'SRLGGB2L', accountIdentifiers: [] } }),
@@ -206,8 +209,9 @@ export async function startMock(options = {}) {
       record.operationId = op.operationId;
 
       const token = (req.headers.authorization ?? '').replace(/^Bearer /, '').split(';')[0];
-      if (token !== state.token) return send(401, { error: 'invalid_token', error_description: `token ${token} is not valid` });
-      if (op.scopes.length && !op.scopes.some((s) => state.scopes.includes(s))) {
+      const credential = token === state.token ? { scopes: state.scopes, accountHolderUid: options.accountHolderUid ?? IDS.account } : state.tokens[token];
+      if (!credential) return send(401, { error: 'invalid_token', error_description: `token ${token} is not valid` });
+      if (op.scopes.length && !op.scopes.some((s) => credential.scopes.includes(s))) {
         return send(403, { error: 'forbidden', error_description: `Access denied: requires one of ${op.scopes.join(', ')}` });
       }
       if (op.signed) {
@@ -227,7 +231,7 @@ export async function startMock(options = {}) {
       }
 
       const handler = handlers[op.operationId];
-      const out = handler ? handler({ params, query, body: record.body, req }) : { body: op.response === 'json' ? {} : '' };
+      const out = handler ? handler({ params, query, body: record.body, req, credential }) : { body: op.response === 'json' ? {} : '' };
       if (failure && failure.mode === 'drop-after') {
         failure.times -= 1;
         record.status = 'dropped';

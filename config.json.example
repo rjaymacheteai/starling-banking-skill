@@ -3,11 +3,9 @@
 // Keep tokens and private keys in separate protected files or environment variables.
 {
   "environment": "live",
-  // Enable only what you need; groups are listed in references/permissions.md.
-  "permissions": ["view"],
   "auth": {
-    "tokenEnv": "STARLING_ACCESS_TOKEN",
-    "tokenFile": null
+    "account": { "tokenEnv": "STARLING_ACCESS_TOKEN", "tokenFile": null },
+    "payments": { "tokenEnv": "STARLING_PAYMENT_ACCESS_TOKEN", "tokenFile": null }
   },
   // Required for signed operations; upload the public key to Starling first.
   "signing": {

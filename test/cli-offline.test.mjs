@@ -14,10 +14,10 @@ test('doctor reports a missing token as failure in both JSON and text modes', as
     assert.equal(json.exitCode, 1);
     assert.equal(report.status, 'error');
     assert.equal(report.data.ok, false);
-    assert.ok(report.data.checks.some((c) => c.status === 'fail' && c.title === 'No access token'));
+    assert.ok(report.data.checks.some((c) => c.status === 'fail' && c.title === 'Required account access token is missing'));
     const text = await main(['doctor'], env);
     assert.equal(text.exitCode, 1);
-    assert.match(text.stdout, /No access token/);
+    assert.match(text.stdout, /Required account access token is missing/);
   } finally {
     rmSync(home, { recursive: true, force: true });
   }

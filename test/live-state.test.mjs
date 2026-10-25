@@ -8,7 +8,7 @@ let w;
 afterEach(async () => { await w?.cleanup(); w = null; });
 
 test('a rejected update gets a fresh preview without cancelling the failed plan or repeating the bank write', async () => {
-  w = await setup({ permissions: ['view', 'payees'] });
+  w = await setup({ });
   w.mock.state.failures.push({ operationId: 'updatePayee', mode: 'status', status: 400, times: 1 });
   const preview = await w.run('payees', 'update', IDS.jane, '--first-name', 'Jane');
   const failed = await w.run('confirm', preview.json.confirmCode);
@@ -28,7 +28,7 @@ test('a rejected update gets a fresh preview without cancelling the failed plan 
 });
 
 test('a lost update response blocks recovery even when the saved helper state is prepared and expired', async () => {
-  w = await setup({ permissions: ['view', 'payees'] });
+  w = await setup({ });
   w.mock.state.failures.push({ operationId: 'updatePayee', mode: 'drop-after', times: 1 });
   const preview = await w.run('payees', 'update', IDS.jane, '--first-name', 'Jane');
   const uncertain = await w.run('confirm', preview.json.confirmCode);

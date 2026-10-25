@@ -7,10 +7,13 @@ Errors print as `{"status":"error","error":{"code","message","hint","details?"}}
 | Code | Meaning and fix |
 |---|---|
 | `NODE_TOO_OLD` | Node.js older than 18. Install the current LTS from nodejs.org. |
-| `NO_TOKEN` | No token in `STARLING_ACCESS_TOKEN` (or the configured variable/file). See `setup.md`. |
+| `NO_TOKEN` | Required account token missing. Set `STARLING_ACCESS_TOKEN` or `auth.account.tokenFile` locally. The payment token is optional and cannot replace it. See [setup](setup.md). |
+| `NO_PAYMENT_TOKEN` | Account access can still work. To initiate payments, add `STARLING_PAYMENT_ACCESS_TOKEN` or `auth.payments.tokenFile` locally; no fallback is used. |
+| `PAYMENT_AUTH_FAILED` | Starling rejected the optional payment token; replace that slot locally and rerun `doctor`. |
+| `PAYMENT_TOKEN_MISMATCH`, `PAYMENT_IDENTITY_UNVERIFIED` | Payment and account holder identities differ or cannot be verified. Correct the payment slot; no payment was initiated. |
+| `PAYMENT_SCOPE_MISSING` | Optional payment token lacks `pay-local:create`. Replace it with a correctly scoped token. |
 | `AUTH_FAILED` | Starling rejected the token: revoked, mistyped, or a sandbox token used on live (or the reverse). Create a new token. |
-| `CONFIG_INVALID` | `config.json` has a syntax error or a bad value; the message lists each problem. Compare with `config.json.example`. |
-| `PERMISSION_DISABLED` | The action's group is off in the config. The user enables it by adding the group to `permissions`. |
+| `CONFIG_INVALID` | `config.json` has a syntax error, bad value or obsolete `permissions` field; the message lists each problem. Compare with `config.json.example`. |
 | `FORBIDDEN` | The token lacks a scope the operation needs. The hint lists them. |
 | `NETWORK_ERROR` | Couldn't reach Starling. For writes, the request might still have been received: check before retrying. |
 | `RATE_LIMITED` | Personal tokens: 5 requests/second, 1,000/day. Wait and make fewer calls. |

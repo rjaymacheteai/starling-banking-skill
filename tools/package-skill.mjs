@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const version = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')).version;
-const files = ['SKILL.md', 'config.json.example', 'scripts', 'references', 'data', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
+const files = ['SKILL.md', 'config.json.example', 'scripts', 'references', 'endpoints', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
 execFileSync('git', ['diff', '--exit-code', 'HEAD', '--', ...files], { cwd: root, stdio: 'pipe' });
 const dir = path.join(root, 'dist');
 mkdirSync(dir, { recursive: true });

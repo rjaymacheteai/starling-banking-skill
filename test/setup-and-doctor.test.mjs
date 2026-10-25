@@ -27,7 +27,6 @@ describe('doctor', () => {
     assert.match(r.text, /✓ Reached Starling .* the token is accepted/);
     assert.match(r.text, /✓ Clock is in sync with Starling/);
     assert.match(r.text, /✓ 1 account\(s\) visible: Personal \(GBP\)/);
-    assert.match(r.text, /Permissions switched on: view/);
     assert.match(r.text, /All good\./);
     assert.ok(!r.text.includes(TOKEN));
   });
@@ -44,8 +43,8 @@ describe('doctor', () => {
     delete w.env.STARLING_ACCESS_TOKEN;
     const r = await doctor();
     assert.equal(r.exitCode, 1);
-    assert.match(r.text, /✗ No access token/);
-    assert.match(r.text, /export STARLING_ACCESS_TOKEN/);
+    assert.match(r.text, /✗ Required account access token is missing/);
+    assert.match(r.text, /STARLING_ACCESS_TOKEN/);
     assert.equal(w.mock.requests.length, 0);
   });
 
@@ -70,13 +69,13 @@ describe('doctor', () => {
     w = await setup({ writeConfig: false });
     const r = await doctor();
     assert.equal(r.exitCode, 0, r.text);
-    assert.match(r.text, /! No config file yet, so safe defaults apply \(view-only\)/);
-    assert.match(r.text, /Run `init`/);
+    assert.match(r.text, /No config file; default credential sources apply/);
+    assert.match(r.text, /run `init`/);
   });
 
   test('a broken config is reported with the line that is wrong', async () => {
     w = await setup();
-    writeFileSync(w.configPath, JSON.stringify({ permissions: ['view', 'payments'], limits: { perPayment: 'lots' }, tpyo: true }));
+    writeFileSync(w.configPath, JSON.stringify({ limits: { perPayment: 'lots' }, tpyo: true }));
     const r = await doctor();
     assert.equal(r.exitCode, 1);
     assert.match(r.text, /limits\.perPayment" must be a number above zero/);
@@ -88,30 +87,26 @@ describe('doctor', () => {
     assert.match(r.text, /! Config setting ignored[\s\S]*Unknown setting "permisions"/);
   });
 
-  test('scope gaps are explained per permission group', async () => {
-    w = await setup({ permissions: ['view', 'card-controls'], mock: { scopes: ['account:read', 'balance:read'] } });
+  test('doctor describes bank-granted scopes without local permission switches', async () => {
+    w = await setup({ mock: { scopes: ['account:read', 'balance:read'] } });
     const r = await doctor();
-    assert.match(r.text, /Token cannot use \d+ of 51 "view" operations/);
-    assert.match(r.text, /! Token cannot use 8 of 8 "card-controls" operations[\s\S]*card-control:edit/);
+    assert.match(r.text, /Account token scopes: account:read, balance:read/);
+    assert.match(r.text, /no local permission switches/);
+    assert.equal(r.exitCode, 0);
   });
 
-  test('a token that could do more than the config allows is called out as a good thing', async () => {
-    w = await setup();
+  test('payments: missing limits/signing disable payments without blocking account reads', async () => {
+    w = await setup({ paymentToken: (await import('./helpers/harness.mjs')).PAYMENT_TOKEN });
     const r = await doctor();
-    assert.match(r.text, /Token could also do \d+ "payments" operations, but that group is switched off/);
-  });
-
-  test('payments: missing limits and missing signing key are both failures with fixes', async () => {
-    w = await setup({ permissions: ['view', 'payments'] });
-    const r = await doctor();
-    assert.equal(r.exitCode, 1);
-    assert.match(r.text, /✗ Signing is not ready/);
-    assert.match(r.text, /✗ Payments are on but spending limits are not set/);
+    assert.equal(r.exitCode, 0);
+    assert.match(r.text, /! Signing is not ready/);
+    assert.match(r.text, /! Payment spending limits are not set/);
+    assert.equal((await doctor('--json')).json.data.capabilities.payments.ready, false);
     assert.match(r.text, /keys generate/);
   });
 
   test('payments: a working key and limits pass, and the self-test is local', async () => {
-    w = await setup({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: true });
+    w = await setup({ limits: PAYMENT_LIMITS, signing: true });
     const r = await doctor();
     assert.equal(r.exitCode, 0, r.text);
     assert.match(r.text, /✓ Signing key works \(rsa-sha512, key uid aaaaaaaa/);
@@ -120,28 +115,29 @@ describe('doctor', () => {
   });
 
   test('payments: a missing key file is reported', async () => {
-    w = await setup({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: true });
-    writeFileSync(w.configPath, JSON.stringify({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: { keyUid: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', keyFile: path.join(w.home, 'nope.key') } }));
+    w = await setup({ limits: PAYMENT_LIMITS, signing: true });
+    writeFileSync(w.configPath, JSON.stringify({ limits: PAYMENT_LIMITS, signing: { keyUid: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', keyFile: path.join(w.home, 'nope.key') } }));
     const r = await doctor();
-    assert.match(r.text, /✗ Signing is not ready[\s\S]*Signing key file not found/);
+    assert.match(r.text, /! Signing is not ready[\s\S]*Signing key file not found/);
   });
 
-  test('payments: a clock that is out by more than 5 seconds fails; 3 seconds warns', async () => {
-    w = await setup({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: true, mock: { clockSkewMs: 9000 } });
-    assert.match((await doctor()).text, /✗ Your clock is about \d+\.\ds away/);
+  test('payments: clock drift disables payment readiness while reads remain available', async () => {
+    w = await setup({ limits: PAYMENT_LIMITS, signing: true, mock: { clockSkewMs: 9000 } });
+    assert.match((await doctor()).text, /! Your clock is about \d+\.\ds away/);
+    assert.equal((await doctor('--json')).json.data.capabilities.payments.ready, false);
     w.mock.state.clockSkewMs = 3000;
     assert.match((await doctor()).text, /! Your clock is about \d+\.\ds away/);
   });
 
   test('a key file that others can read gets a warning', async (t) => {
     if (process.platform === 'win32') return t.skip('unix permissions only');
-    w = await setup({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: true });
+    w = await setup({ limits: PAYMENT_LIMITS, signing: true });
     (await import('node:fs')).chmodSync(w.keyFile, 0o644);
     assert.match((await doctor()).text, /! Private key file is readable by other users[\s\S]*chmod 600/);
   });
 
   test('terminal confirmation mode is explained', async () => {
-    w = await setup({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: true, config: { confirmation: { mode: 'terminal' } } });
+    w = await setup({ limits: PAYMENT_LIMITS, signing: true, config: { confirmation: { mode: 'terminal' } } });
     assert.match((await doctor()).text, /Confirmation mode: terminal[\s\S]*typing a code in a terminal/);
   });
 });
@@ -153,7 +149,7 @@ describe('init and keys generate', () => {
     assert.equal(r.exitCode, 0, r.stdout);
     assert.ok(existsSync(r.data.created));
     assert.match(readFileSync(r.data.created, 'utf8'), /Starling banking skill: configuration/);
-    assert.equal((await w.run('permissions')).data.configFound, true);
+    assert.ok(existsSync(r.data.created));
     assert.equal((await w.run('init')).error.code, 'FILE_EXISTS');
     assert.equal((await w.run('init', '--force')).exitCode, 0);
     assert.equal((await doctor()).exitCode, 0);

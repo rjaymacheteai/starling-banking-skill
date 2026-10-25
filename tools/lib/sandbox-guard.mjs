@@ -4,7 +4,9 @@ export function assertSandboxConfig(config, env, tokenFile) {
   if (config.environment !== 'sandbox' || baseUrlFor(config, env) !== 'https://api-sandbox.starlingbank.com') {
     throw new Error('Sandbox checks require the sandbox API host.');
   }
-  if (config.auth.tokenFile !== tokenFile) throw new Error('Sandbox checks require their isolated token file.');
+  if ((config.auth.account ?? config.auth).tokenFile !== tokenFile) throw new Error('Sandbox checks require their isolated token file.');
+  const payment = config.auth.payments;
+  if (payment && (payment.tokenFile ? payment.tokenFile !== tokenFile : env[payment.tokenEnv])) throw new Error('Sandbox payment checks require their isolated token file.');
 }
 
 export function assertSandboxToken(token, liveTokens) {

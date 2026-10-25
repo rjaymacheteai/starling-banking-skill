@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 const SKILL_SRC = new URL('../../../', import.meta.url).pathname;
-const SKILL_FILES = ['SKILL.md', 'config.json.example', 'scripts', 'references', 'data', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
+const SKILL_FILES = ['SKILL.md', 'config.json.example', 'scripts', 'references', 'endpoints', 'LICENSE', 'THIRD_PARTY_NOTICES.md'];
 const TOOLS = 'Bash,Read,Glob,Grep,Skill';
 
 // A throwaway project directory whose only skill is the one under test, so results are not

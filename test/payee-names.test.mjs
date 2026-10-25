@@ -5,7 +5,7 @@ import { setup, IDS, PAYMENT_LIMITS } from './helpers/harness.mjs';
 let w;
 afterEach(async () => { await w?.cleanup(); w = null; });
 const account = ['--sort-code', '12-34-56', '--account-number', '12345678'];
-const world = async () => { w = await setup({ permissions: ['view', 'payees'] }); };
+const world = async () => { w = await setup({ }); };
 
 test('personal payee stores the supplied name separately from the display label, after approval', async () => {
   await world();
@@ -142,15 +142,16 @@ test('mock rejects the same missing-accounts payload rejected by the live bank',
   assert.match(confirmed.error.message, /ACCOUNTS_size/);
 });
 
-test('recipient name update respects a disabled payees permission before making requests', async () => {
-  w = await setup();
-  const result = await w.run('payees', 'update', IDS.jane, '--first-name', 'Jane');
-  assert.equal(result.error.code, 'PERMISSION_DISABLED');
-  assert.equal(w.mock.requests.length, 0);
+test('recipient name update is denied by bank token scopes after a confirmed preview', async () => {
+  w = await setup({ mock: { scopes: ['account:read', 'payee:read'] } });
+  const preview = await w.run('payees', 'update', IDS.jane, '--first-name', 'Jane');
+  assert.equal(preview.json.status, 'needs_confirmation');
+  assert.equal(w.mock.writes().length, 0);
+  assert.equal((await w.run('confirm', preview.json.confirmCode)).error.code, 'FORBIDDEN');
 });
 
 test('payment preview displays both the label and supplied recipient name without claiming a name match', async () => {
-  w = await setup({ permissions: ['view', 'payments'], limits: PAYMENT_LIMITS, signing: true });
+  w = await setup({ limits: PAYMENT_LIMITS, signing: true });
   Object.assign(w.mock.state.payees.find((p) => p.payeeUid === IDS.jane), { firstName: 'Jane', lastName: 'Registered' });
   const preview = await w.run('pay', '--payee', IDS.jane, '--amount', '0.01', '--reference', 'Test');
   assert.match(preview.json.summary, /Jane Doe/);

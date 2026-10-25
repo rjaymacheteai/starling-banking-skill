@@ -14,6 +14,7 @@ const profile = process.argv[3] ?? 'default';
 const { home, configFile, tokenFile, keyDir } = sandboxPaths(root, profile);
 const env = { ...process.env, STARLING_BANKING_HOME: home, STARLING_BANKING_CONFIG: configFile };
 delete env.STARLING_BANKING_TEST_BASE_URL;
+delete env.STARLING_PAYMENT_ACCESS_TOKEN;
 const save = (file, value) => writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { mode: 0o600 });
 
 async function command(args) {
@@ -28,7 +29,7 @@ async function run() {
   mkdirSync(home, { recursive: true, mode: 0o700 });
   if (process.argv[2] === 'setup') {
     if (!existsSync(configFile)) save(configFile, {
-      environment: 'sandbox', permissions: ['view'], auth: { tokenFile },
+      environment: 'sandbox', auth: { account: { tokenFile }, payments: { tokenFile } },
       confirmation: { mode: 'agent', expiresMinutes: 10 },
       limits: { currency: 'GBP', perPayment: 1, perDay: 10 },
     });

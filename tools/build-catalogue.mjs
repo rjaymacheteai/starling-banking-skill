@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-// Builds data/operations.json from Starling's public OpenAPI spec.
+// Builds endpoints/catalog.json from Starling's public OpenAPI spec.
 //
 // The catalogue keeps only interface facts the CLI needs to route and gate calls:
 // method, path, operationId, scopes, parameters, whether message signing is required,
-// and the permission group each operation belongs to. It is not a copy of the spec.
+// and the operation category each operation belongs to. It is not a copy of the spec.
 //
 // Usage:
 //   node tools/build-catalogue.mjs                 # fetches the live spec
@@ -14,12 +14,12 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const SPEC_URL = 'https://api.starlingbank.com/api/openapi.json';
-const OUT = fileURLToPath(new URL('../data/operations.json', import.meta.url));
+const OUT = fileURLToPath(new URL('../endpoints/catalog.json', import.meta.url));
 
 const REFERENCE_OUT = fileURLToPath(new URL('../references/operations.md', import.meta.url));
 
-const GROUP_TEXT = {
-  view: 'Read-only. Always on.',
+const CATEGORY_TEXT = {
+  view: 'Read operations. Starling token scopes apply.',
   organise: 'Edit notes, categories, receipts, attachments, profile image. Runs immediately.',
   'card-controls': 'Lock/unlock cards and switch card payment types. Runs immediately.',
   savings: 'Savings goals, moving money to/from goals, round-up. Runs immediately.',
@@ -38,9 +38,9 @@ function renderReference(operations) {
     'A token needs **any one** of an operation\'s scopes. "Signed" operations also need a signing key.',
     '',
   ];
-  for (const group of Object.keys(GROUP_TEXT)) {
-    const ops = operations.filter((o) => o.group === group);
-    lines.push(`## ${group} (${ops.length})`, '', GROUP_TEXT[group], '', '| operationId | method and path | scopes | notes |', '|---|---|---|---|');
+  for (const category of Object.keys(CATEGORY_TEXT)) {
+    const ops = operations.filter((o) => o.category === category);
+    lines.push(`## ${category} (${ops.length})`, '', CATEGORY_TEXT[category], '', '| operationId | method and path | scopes | notes |', '|---|---|---|---|');
     for (const o of ops) {
       const notes = [o.signed ? 'signed' : '', o.response === 'csv' ? 'CSV file (--out)' : o.response === 'binary' ? 'file (--out)' : '', o.queryParams.filter((q) => q.required).map((q) => `needs --query ${q.name}`).join(', ')].filter(Boolean).join('; ');
       lines.push(`| \`${o.operationId}\` | ${o.method} \`${o.path.replace('/api/v2', '')}\` | ${o.scopes.join(', ') || 'none'} | ${notes} |`);
@@ -52,9 +52,9 @@ function renderReference(operations) {
 
 // Operations that send money out, change who can be paid, or change identity details
 // need an explicit preview + confirm step before they run.
-const CONFIRM_GROUPS = new Set(['payments', 'payees', 'account-settings']);
+const CONFIRM_CATEGORIES = new Set(['payments', 'payees', 'account-settings']);
 
-function groupFor(method, p) {
+function categoryFor(method, p) {
   if (method === 'get') return 'view';
   if (p === '/api/v2/identity/logout') return 'account-settings';
   if (p.startsWith('/api/v2/payments/local/')) return 'payments';
@@ -66,7 +66,7 @@ function groupFor(method, p) {
   if (p === '/api/v2/addresses' || p === '/api/v2/account-holder/individual/email') return 'account-settings';
   if (p.startsWith('/api/v2/feed/')) return 'organise';
   if (p.includes('/profile-image')) return 'organise';
-  throw new Error(`Unclassified write operation: ${method.toUpperCase()} ${p}. Add it to groupFor().`);
+  throw new Error(`Unclassified write operation: ${method.toUpperCase()} ${p}. Add it to categoryFor().`);
 }
 
 function deref(spec, node) {
@@ -108,7 +108,7 @@ async function main() {
       const body = op.requestBody?.content ? Object.entries(op.requestBody.content)[0] : null;
       const bodySchema = body ? deref(spec, body[1].schema) : null;
       const signed = (op.security ?? []).some((s) => 'BearerAndSignature' in s);
-      const group = groupFor(method, p);
+      const category = categoryFor(method, p);
       operations.push({
         operationId: op.operationId,
         method: method.toUpperCase(),
@@ -116,9 +116,9 @@ async function main() {
         tag: op.tags?.[0] ?? null,
         summary: op.summary ?? '',
         scopes,
-        group,
+        category,
         signed,
-        confirm: CONFIRM_GROUPS.has(group),
+        confirm: CONFIRM_CATEGORIES.has(category),
         pathParams: params.filter((x) => x.in === 'path').map((x) => x.name),
         queryParams: params
           .filter((x) => x.in === 'query')
@@ -148,7 +148,7 @@ async function main() {
   await writeFile(OUT, JSON.stringify(catalogue, null, 2) + '\n');
   await writeFile(REFERENCE_OUT, renderReference(operations));
   const byGroup = {};
-  for (const o of operations) byGroup[o.group] = (byGroup[o.group] ?? 0) + 1;
+  for (const o of operations) byGroup[o.category] = (byGroup[o.category] ?? 0) + 1;
   console.log(`Wrote ${path.relative(process.cwd(), OUT)}: ${operations.length} operations`, byGroup);
 }
 

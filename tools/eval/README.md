@@ -10,7 +10,7 @@ npm run eval
 ```
 
 Default: Codex CLI with `gpt-5.6-luna`, low reasoning, one pass, concurrency 1,
-four cases (payment approval/decline/disabled permissions and payee creation).
+four cases (payment approval/decline/missing payment token and payee creation).
 Uses the CLI's existing login; no API key is required when signed in through ChatGPT.
 This consumes account usage. The runner never upgrades or changes models automatically.
 
@@ -56,3 +56,10 @@ Ignored `evals-results/` contains manifests, individual runs and summaries. Mani
 record provider, models, selected cases, effort, limits and skill SHA-256. Keep raw
 transcripts private; publish only reviewed aggregate evidence. A small passing run
 is a smoke check, not a reliability guarantee or proof of a specific host's full runtime.
+
+## v0.2.0 token/scope check
+
+Use `--cases tokens-,card-lock-denied-scope --models gpt-5.6-luna --effort low` for
+five focused cases: no tokens, account only, payment only, both tokens with separate
+payee/payment approvals, and a bank-scope denial. Deterministic tests cover rejected
+credentials, missing scopes, mismatched holders and token revocation independently.

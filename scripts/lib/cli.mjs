@@ -9,13 +9,12 @@ import { transactionsCommands } from './commands/transactions.mjs';
 import { VERSION } from './client.mjs';
 import { createContext } from './context.mjs';
 import { runDoctor } from './doctor.mjs';
-import { assertGroup } from './engine.mjs';
 import { CliError } from './errors.mjs';
 import { redact } from './redact.mjs';
 
 const COMMANDS = {
   doctor: {
-    summary: 'Check the whole setup (Node, config, token, signing key, clock, permissions) and say how to fix anything wrong.',
+    summary: 'Check the whole setup (Node, config, token, signing key, clock, token scopes) and say how to fix anything wrong.',
     usage: 'doctor [--json]',
     options: { boolean: ['json'] },
     needsContext: false,
@@ -34,28 +33,6 @@ const COMMANDS = {
   ...cardsCommands,
   ...savingsCommands,
   ...mandatesCommands,
-};
-
-// Write commands name the permission group they need. Checking it first means a switched-off
-// action fails immediately, before any lookups or other requests are made.
-const REQUIRES = {
-  pay: 'payments',
-  'payments cancel-standing-order': 'payments',
-  'payees add': 'payees',
-  'payees add-account': 'payees',
-  'payees rename': 'payees',
-  'payees update': 'payees',
-  'payees delete': 'payees',
-  'cards lock': 'card-controls',
-  'cards unlock': 'card-controls',
-  'cards set': 'card-controls',
-  'goals create': 'savings',
-  'goals add': 'savings',
-  'goals withdraw': 'savings',
-  'goals delete': 'savings',
-  'mandates cancel': 'account-settings',
-  'transactions note': 'organise',
-  'transactions categorise': 'organise',
 };
 
 function helpText(name) {
@@ -106,7 +83,6 @@ export async function main(argv, env = process.env, overrides = {}) {
 
     const { flags, positionals } = parseArgs(args, { string: [], boolean: [], multi: [], ...command.options });
     const ctx = command.needsContext === false ? { env } : createContext(env, overrides);
-    if (REQUIRES[found.name]) assertGroup(ctx, REQUIRES[found.name], found.name);
     const result = await command.run(ctx, { flags, positionals });
 
     if (command.text && result && typeof result.text === 'string') {

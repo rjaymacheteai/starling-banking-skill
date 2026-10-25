@@ -1,6 +1,5 @@
 import readline from 'node:readline/promises';
 import { getOperation } from './catalogue.mjs';
-import { GROUPS } from './config.mjs';
 import { CliError } from './errors.mjs';
 import { guardFor } from './guards.mjs';
 import { requestHash } from './state.mjs';
@@ -10,21 +9,8 @@ import { redact } from './redact.mjs';
 const PREFIX = { payments: 'pay', payees: 'payee', 'account-settings': 'acct' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// The single gate every API operation passes through: permission group check, then either
-// run it (reads and low-risk writes) or turn it into a preview that needs a confirm.
-export function assertGroup(ctx, group, what = 'that action') {
-  if (ctx.config.permissions.includes(group)) return;
-  const g = GROUPS[group];
-  throw new CliError('PERMISSION_DISABLED', `"${group}" actions are switched off in your config, so ${what} was not run.`, {
-    hint: `${g.title}: ${g.summary} To allow it, the user adds "${group}" to "permissions" in ${ctx.configFile} (see config.json.example). Tell the user this is switched off; do not edit the config yourself unless they explicitly ask you to.`,
-    details: { group, enabled: ctx.config.permissions },
-  });
-}
-
-export function assertAllowed(ctx, op) {
-  assertGroup(ctx, op.group, op.operationId);
-}
-
+// Shared execution/confirmation boundary. Starling enforces token scopes; local
+// payment limits, recipient restrictions and confirmation plans remain mandatory.
 function genericSummary(op, request) {
   const target = op.path.replace(/\{(\w+)\}/g, (_, k) => request.pathParams[k] ?? `{${k}}`);
   const body = request.body === undefined ? '' : `\nRequest values:\n${JSON.stringify(request.body, null, 2)}`;
@@ -34,11 +20,12 @@ function genericSummary(op, request) {
 
 export async function runOperation(ctx, operationId, input = {}) {
   const op = getOperation(operationId);
-  assertAllowed(ctx, op);
+  void ctx.client; // required account credential, including before an unsigned write preview
   const request = { pathParams: input.pathParams ?? {}, query: input.query ?? {}, body: input.body };
 
   if (!op.confirm) return { status: 'ok', ...(await execute(ctx, op, { ...request, rawBody: input.rawBody, contentType: input.contentType, out: input.out, force: input.force })) };
 
+  if (operationId === 'makeLocalPayment') await ctx.client.ensurePayment();
   const guard = guardFor(operationId);
   const checked = guard
     ? await guard(ctx, request)
@@ -49,11 +36,11 @@ export async function runOperation(ctx, operationId, input = {}) {
       };
   if (op.signed) void ctx.client.signer; // fail now, not after the user has approved, if signing is not set up
   const plan = ctx.plans.create({
-    prefix: PREFIX[op.group] ?? 'act',
+    prefix: PREFIX[op.category] ?? 'act',
     request: { operationId, ...request, environment: ctx.config.environment },
     summary: checked.summary,
     details: checked.details,
-    meta: { ...checked.meta, group: op.group },
+    meta: { ...checked.meta, category: op.category },
     expiresMinutes: ctx.config.confirmation.expiresMinutes,
   });
   const how = ctx.config.confirmation.mode === 'terminal'
@@ -77,18 +64,18 @@ async function execute(ctx, op, request, { planCode } = {}) {
   } catch (e) {
     if (op.method !== 'GET') {
       const unknown = e instanceof CliError && (e.details?.maybeReceived || e.code === 'SERVER_ERROR');
-      ctx.ledger.append({ kind: op.group === 'payments' ? 'payment' : 'write', operationId: op.operationId, group: op.group, planCode, outcome: unknown ? 'unknown' : 'failed', error: e.code, ...paymentFields(op, request) });
+      ctx.ledger.append({ kind: op.category === 'payments' ? 'payment' : 'write', operationId: op.operationId, category: op.category, planCode, outcome: unknown ? 'unknown' : 'failed', error: e.code, ...paymentFields(op, request) });
     }
     throw e;
   }
   if (op.method !== 'GET') {
-    ctx.ledger.append({ kind: op.group === 'payments' ? 'payment' : 'write', operationId: op.operationId, group: op.group, planCode, outcome: 'submitted', httpStatus: res.status, ...paymentFields(op, request) });
+    ctx.ledger.append({ kind: op.category === 'payments' ? 'payment' : 'write', operationId: op.operationId, category: op.category, planCode, outcome: 'submitted', httpStatus: res.status, ...paymentFields(op, request) });
   }
   return { result: res.file ? { file: res.file, bytes: res.bytes } : (res.data ?? res.text ?? null), httpStatus: res.status, ...(res.note ? { note: res.note } : {}) };
 }
 
 function paymentFields(op, request) {
-  if (op.group !== 'payments' || !request.body?.amount) return {};
+  if (op.category !== 'payments' || !request.body?.amount) return {};
   return {
     amountMinor: request.body.amount.minorUnits,
     currency: request.body.amount.currency,
@@ -131,7 +118,8 @@ export async function confirmPlan(ctx, code, { retry = false } = {}) {
   }
 
   const op = getOperation(plan.request.operationId);
-  assertAllowed(ctx, op);
+  void ctx.client; // required account credential, including before an unsigned write preview
+  if (op.operationId === 'makeLocalPayment') await ctx.client.ensurePayment();
   const guard = guardFor(op.operationId);
   if (guard) await guard(ctx, plan.request, { excludePlan: plan.code }); // limits may have changed since the preview
   if (ctx.config.confirmation.mode === 'terminal') await askInTerminal(ctx, plan);

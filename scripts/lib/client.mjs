@@ -5,7 +5,7 @@ import { httpRequest } from './http.mjs';
 import { redact } from './redact.mjs';
 import { loadSigner, signedHeaders } from './signing.mjs';
 
-export const VERSION = '0.1.1';
+export const VERSION = '0.2.0';
 const HOSTS = { live: 'https://api.starlingbank.com', sandbox: 'https://api-sandbox.starlingbank.com' };
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 const SAFE_SEGMENT = /^[A-Za-z0-9_.-]+$/;
@@ -36,10 +36,11 @@ function errorMessage(body, text) {
 }
 
 export class StarlingClient {
-  constructor({ config, env = process.env, token, retryDelayMs = 1000 }) {
+  constructor({ config, env = process.env, token, retryDelayMs = 1000, tokenRole = 'account' }) {
     this.config = config;
     this.env = env;
     this.token = token;
+    this.tokenRole = tokenRole;
     this.retryDelayMs = retryDelayMs;
     this.baseUrl = baseUrlFor(config, env);
     this.skewMs = null; // server clock minus local clock, from the last response's Date header
@@ -143,6 +144,7 @@ export class StarlingClient {
       }
     }
     if (ok) {
+      if (op.operationId === 'getTokenIdentity' && data?.authenticated !== true) throw new CliError(this.tokenRole === 'payments' ? 'PAYMENT_AUTH_FAILED' : 'AUTH_FAILED', `Starling did not authenticate the ${this.tokenRole === 'payments' ? 'payment' : 'account'} token.`, { hint: 'Replace the affected token locally and run `doctor`.' });
       if (data && data.success === false) {
         throw new CliError('API_REJECTED', `Starling rejected the request: ${redact(errorMessage(data, text))}`, { details: { status: res.status, body: data } });
       }
@@ -155,12 +157,12 @@ export class StarlingClient {
   httpError(op, res, data, text) {
     const message = redact(errorMessage(data, text)) || `HTTP ${res.status}`;
     const details = { status: res.status, operation: op.operationId, body: data ?? undefined };
-    const scopeHint = op.scopes.length ? `This needs a token with one of these scopes: ${op.scopes.join(', ')}.` : '';
+    const scopeHint = op.scopes.length ? `The ${this.tokenRole === 'payments' ? 'payment' : 'account'} token needs one of these scopes: ${op.scopes.join(', ')}.` : '';
     switch (res.status) {
       case 400:
         return new CliError('BAD_REQUEST', `Starling rejected the request: ${message}`, { details });
       case 401:
-        return new CliError('AUTH_FAILED', 'Starling did not accept the access token.', {
+        return new CliError(this.tokenRole === 'payments' ? 'PAYMENT_AUTH_FAILED' : 'AUTH_FAILED', `Starling did not accept the ${this.tokenRole === 'payments' ? 'payment' : 'account'} access token.`, {
           hint: 'The token may be mistyped, revoked or from another environment (live vs sandbox). Create a new personal access token in the developer portal and run `doctor`.',
           details,
         });

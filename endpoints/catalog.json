@@ -13,13 +13,13 @@
         "customer:read",
         "account-holder-type:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "deleteProfileImage",
@@ -30,7 +30,6 @@
       "scopes": [
         "profile-image:edit"
       ],
-      "group": "organise",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -38,7 +37,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "organise"
     },
     {
       "operationId": "downloadProfileImage",
@@ -49,7 +49,6 @@
       "scopes": [
         "profile-image:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -57,7 +56,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "binary"
+      "response": "binary",
+      "category": "view"
     },
     {
       "operationId": "updateProfileImage",
@@ -68,7 +68,6 @@
       "scopes": [
         "profile-image:edit"
       ],
-      "group": "organise",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -80,7 +79,8 @@
         "required": [],
         "fields": []
       },
-      "response": "none"
+      "response": "none",
+      "category": "organise"
     },
     {
       "operationId": "getBusiness",
@@ -91,13 +91,13 @@
       "scopes": [
         "account:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getCorrespondenceAddress",
@@ -108,13 +108,13 @@
       "scopes": [
         "address:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getRegisteredAddress",
@@ -125,13 +125,13 @@
       "scopes": [
         "address:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getIndividual",
@@ -142,13 +142,13 @@
       "scopes": [
         "customer:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "updateEmail",
@@ -159,7 +159,6 @@
       "scopes": [
         "email:edit"
       ],
-      "group": "account-settings",
       "signed": true,
       "confirm": true,
       "pathParams": [],
@@ -173,7 +172,8 @@
           "email"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "account-settings"
     },
     {
       "operationId": "getJointAccount",
@@ -184,13 +184,13 @@
       "scopes": [
         "customer:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getAccountHolderName",
@@ -201,13 +201,13 @@
       "scopes": [
         "account-holder-name:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getSoleTrader",
@@ -218,13 +218,13 @@
       "scopes": [
         "account:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getSavingsGoals",
@@ -235,7 +235,6 @@
       "scopes": [
         "savings-goal:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -243,7 +242,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "createSavingsGoal",
@@ -254,7 +254,6 @@
       "scopes": [
         "savings-goal:create"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -274,7 +273,8 @@
           "base64EncodedPhoto"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "savings"
     },
     {
       "operationId": "deleteSavingsGoal",
@@ -285,7 +285,6 @@
       "scopes": [
         "savings-goal:delete"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -294,7 +293,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "savings"
     },
     {
       "operationId": "getSavingsGoal",
@@ -305,7 +305,6 @@
       "scopes": [
         "savings-goal:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -314,7 +313,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "updateSavingsGoal",
@@ -325,7 +325,6 @@
       "scopes": [
         "savings-goal:create"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -346,7 +345,8 @@
           "base64EncodedPhoto"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "savings"
     },
     {
       "operationId": "addMoney",
@@ -357,7 +357,6 @@
       "scopes": [
         "savings-goal-transfer:create"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -376,7 +375,8 @@
           "reference"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "savings"
     },
     {
       "operationId": "getSavingsGoalPhoto",
@@ -387,7 +387,6 @@
       "scopes": [
         "savings-goal:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -396,7 +395,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "deleteRecurringTransfer",
@@ -407,7 +407,6 @@
       "scopes": [
         "savings-goal-transfer:delete"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -416,7 +415,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "savings"
     },
     {
       "operationId": "getRecurringTransfer",
@@ -427,7 +427,6 @@
       "scopes": [
         "savings-goal-transfer:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -436,7 +435,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "createOrUpdateRecurringTransfer",
@@ -447,7 +447,6 @@
       "scopes": [
         "savings-goal-transfer:create"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -468,7 +467,8 @@
           "reference"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "savings"
     },
     {
       "operationId": "withdrawMoney",
@@ -479,7 +479,6 @@
       "scopes": [
         "savings-goal-transfer:create"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -498,7 +497,8 @@
           "reference"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "savings"
     },
     {
       "operationId": "getSpaces",
@@ -509,7 +509,6 @@
       "scopes": [
         "space:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -517,7 +516,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getSpacePhoto",
@@ -528,7 +528,6 @@
       "scopes": [
         "space:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -537,7 +536,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getSpendingSpace",
@@ -548,7 +548,6 @@
       "scopes": [
         "space:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -557,7 +556,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getAccounts",
@@ -569,13 +569,13 @@
         "account:read",
         "account-list:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getAccountBalance",
@@ -586,7 +586,6 @@
       "scopes": [
         "balance:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -594,7 +593,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getConfirmationOfFunds",
@@ -605,7 +605,6 @@
       "scopes": [
         "confirmation-of-funds:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -620,7 +619,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "downloadCSVFeedExportForDateRange",
@@ -631,7 +631,6 @@
       "scopes": [
         "feed-export-csv:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -652,7 +651,8 @@
         }
       ],
       "body": null,
-      "response": "csv"
+      "response": "csv",
+      "category": "view"
     },
     {
       "operationId": "getAccountIdentifiers",
@@ -663,7 +663,6 @@
       "scopes": [
         "account-identifier:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -671,7 +670,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getAddresses",
@@ -682,13 +682,13 @@
       "scopes": [
         "address:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "updateCurrentAddress",
@@ -699,7 +699,6 @@
       "scopes": [
         "address:edit"
       ],
-      "group": "account-settings",
       "signed": true,
       "confirm": true,
       "pathParams": [],
@@ -725,7 +724,8 @@
           "from"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "account-settings"
     },
     {
       "operationId": "listCards",
@@ -736,13 +736,13 @@
       "scopes": [
         "card:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "enableAtm",
@@ -753,7 +753,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -769,7 +768,8 @@
           "enabled"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "enableCurrencySwitch",
@@ -780,7 +780,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -798,7 +797,8 @@
           "currency"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "enableCard",
@@ -809,7 +809,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -825,7 +824,8 @@
           "enabled"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "enableGamblingPayments",
@@ -836,7 +836,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -852,7 +851,8 @@
           "enabled"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "enableMagStripePayment",
@@ -863,7 +863,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -879,7 +878,8 @@
           "enabled"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "enableMobileWallet",
@@ -890,7 +890,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -906,7 +905,8 @@
           "enabled"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "enableOnlinePayments",
@@ -917,7 +917,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -933,7 +932,8 @@
           "enabled"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "enablePos",
@@ -944,7 +944,6 @@
       "scopes": [
         "card-control:edit"
       ],
-      "group": "card-controls",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -960,7 +959,8 @@
           "enabled"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "card-controls"
     },
     {
       "operationId": "listMandates",
@@ -971,13 +971,13 @@
       "scopes": [
         "mandate:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "cancelMandate",
@@ -988,7 +988,6 @@
       "scopes": [
         "mandate:delete"
       ],
-      "group": "account-settings",
       "signed": false,
       "confirm": true,
       "pathParams": [
@@ -996,7 +995,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "account-settings"
     },
     {
       "operationId": "getMandate",
@@ -1007,7 +1007,6 @@
       "scopes": [
         "mandate:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1015,7 +1014,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "listPaymentsForMandate",
@@ -1026,7 +1026,6 @@
       "scopes": [
         "mandate:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1041,7 +1040,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "listMandatesForAccount",
@@ -1052,7 +1052,6 @@
       "scopes": [
         "mandate:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1060,7 +1059,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "queryFeedItems",
@@ -1071,7 +1071,6 @@
       "scopes": [
         "transaction:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1087,7 +1086,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getFeedItem",
@@ -1098,7 +1098,6 @@
       "scopes": [
         "transaction:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1108,7 +1107,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getFeedItemAttachments",
@@ -1119,7 +1119,6 @@
       "scopes": [
         "attachment:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1129,7 +1128,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "attachToFeedItem",
@@ -1140,7 +1140,6 @@
       "scopes": [
         "attachment:write"
       ],
-      "group": "organise",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1154,7 +1153,8 @@
         "required": [],
         "fields": []
       },
-      "response": "json"
+      "response": "json",
+      "category": "organise"
     },
     {
       "operationId": "downloadFeedItemAttachment",
@@ -1165,7 +1165,6 @@
       "scopes": [
         "attachment:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1176,7 +1175,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "binary"
+      "response": "binary",
+      "category": "view"
     },
     {
       "operationId": "getMastercardFeedItem",
@@ -1187,7 +1187,6 @@
       "scopes": [
         "transaction:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1197,7 +1196,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getReceipt",
@@ -1208,7 +1208,6 @@
       "scopes": [
         "receipt:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1218,7 +1217,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "createOrUpdateReceipt",
@@ -1231,7 +1231,6 @@
         "metadata:create",
         "metadata:edit"
       ],
-      "group": "organise",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1265,7 +1264,8 @@
           "providerName"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "organise"
     },
     {
       "operationId": "getReceipts",
@@ -1276,7 +1276,6 @@
       "scopes": [
         "receipts:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1286,7 +1285,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "changeTransactionCategory",
@@ -1297,7 +1297,6 @@
       "scopes": [
         "transaction:edit"
       ],
-      "group": "organise",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1317,7 +1316,8 @@
           "previousSpendingCategoryReferencesUpdate"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "organise"
     },
     {
       "operationId": "updateUserNote",
@@ -1328,7 +1328,6 @@
       "scopes": [
         "transaction:edit"
       ],
-      "group": "organise",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1346,7 +1345,8 @@
           "userNote"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "organise"
     },
     {
       "operationId": "queryPaginatedFeedItemsByCategoryWithTransactionTimesBetween",
@@ -1357,7 +1357,6 @@
       "scopes": [
         "transaction:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1390,7 +1389,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "queryFeedItemsByCategoryWithTransactionTimesBetween",
@@ -1401,7 +1401,6 @@
       "scopes": [
         "transaction:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1423,7 +1422,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "stopRoundUpGoal",
@@ -1434,7 +1434,6 @@
       "scopes": [
         "savings-goal:delete"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1442,7 +1441,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "savings"
     },
     {
       "operationId": "fetchRoundUpGoal",
@@ -1453,7 +1453,6 @@
       "scopes": [
         "savings-goal:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1461,7 +1460,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "activateRoundUpGoal",
@@ -1472,7 +1472,6 @@
       "scopes": [
         "savings-goal:create"
       ],
-      "group": "savings",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1490,7 +1489,8 @@
           "roundUpMultiplier"
         ]
       },
-      "response": "none"
+      "response": "none",
+      "category": "savings"
     },
     {
       "operationId": "queryFeedItemsWithTransactionTimesBetween",
@@ -1501,7 +1501,6 @@
       "scopes": [
         "transaction:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1522,7 +1521,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getAuthorisingIndividual",
@@ -1533,13 +1533,13 @@
       "scopes": [
         "authorising-individual:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "logoutIndividual",
@@ -1548,13 +1548,13 @@
       "tag": "API User Identities",
       "summary": "Logout the current individual",
       "scopes": [],
-      "group": "account-settings",
       "signed": false,
       "confirm": true,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "account-settings"
     },
     {
       "operationId": "getTokenIdentity",
@@ -1563,13 +1563,13 @@
       "tag": "API User Identities",
       "summary": "Get current token identity",
       "scopes": [],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getPayees",
@@ -1580,13 +1580,13 @@
       "scopes": [
         "payee:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "createPayee",
@@ -1597,7 +1597,6 @@
       "scopes": [
         "payee:create"
       ],
-      "group": "payees",
       "signed": false,
       "confirm": true,
       "pathParams": [],
@@ -1620,7 +1619,8 @@
           "accounts"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "payees"
     },
     {
       "operationId": "deletePayee",
@@ -1631,7 +1631,6 @@
       "scopes": [
         "payee:delete"
       ],
-      "group": "payees",
       "signed": false,
       "confirm": true,
       "pathParams": [
@@ -1639,7 +1638,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "payees"
     },
     {
       "operationId": "getPayee",
@@ -1650,7 +1650,6 @@
       "scopes": [
         "payee:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1658,7 +1657,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "updatePayee",
@@ -1669,7 +1669,6 @@
       "scopes": [
         "payee:edit"
       ],
-      "group": "payees",
       "signed": false,
       "confirm": true,
       "pathParams": [
@@ -1694,7 +1693,8 @@
           "accounts"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "payees"
     },
     {
       "operationId": "createPayeeAccount",
@@ -1705,7 +1705,6 @@
       "scopes": [
         "payee:create"
       ],
-      "group": "payees",
       "signed": false,
       "confirm": true,
       "pathParams": [
@@ -1732,7 +1731,8 @@
           "secondaryIdentifier"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "payees"
     },
     {
       "operationId": "deletePayeeAccount",
@@ -1743,7 +1743,6 @@
       "scopes": [
         "payee:delete"
       ],
-      "group": "payees",
       "signed": false,
       "confirm": true,
       "pathParams": [
@@ -1752,7 +1751,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "payees"
     },
     {
       "operationId": "listPaymentsForPayeeAccount",
@@ -1763,7 +1763,6 @@
       "scopes": [
         "payee-transaction:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1779,7 +1778,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "listPaymentOrdersForAccount",
@@ -1790,7 +1790,6 @@
       "scopes": [
         "scheduled-payment:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1799,7 +1798,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "servePayeeImageFile",
@@ -1810,7 +1810,6 @@
       "scopes": [
         "payee-image:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1818,7 +1817,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "binary"
+      "response": "binary",
+      "category": "view"
     },
     {
       "operationId": "makeLocalPayment",
@@ -1830,7 +1830,6 @@
         "pay-local:create",
         "pay-local-once:create"
       ],
-      "group": "payments",
       "signed": true,
       "confirm": true,
       "pathParams": [
@@ -1854,7 +1853,8 @@
           "spendingCategory"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "payments"
     },
     {
       "operationId": "listStandingOrders",
@@ -1866,7 +1866,6 @@
         "standing-order:read",
         "standing-order-own:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1875,7 +1874,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "createStandingOrder",
@@ -1886,7 +1886,6 @@
       "scopes": [
         "standing-order:create"
       ],
-      "group": "payments",
       "signed": true,
       "confirm": true,
       "pathParams": [
@@ -1912,7 +1911,8 @@
           "spendingCategory"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "payments"
     },
     {
       "operationId": "cancelStandingOrder",
@@ -1923,7 +1923,6 @@
       "scopes": [
         "standing-order:delete"
       ],
-      "group": "payments",
       "signed": true,
       "confirm": true,
       "pathParams": [
@@ -1933,7 +1932,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "none"
+      "response": "none",
+      "category": "payments"
     },
     {
       "operationId": "getStandingOrder",
@@ -1945,7 +1945,6 @@
         "standing-order:read",
         "standing-order-own:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -1955,7 +1954,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "updateStandingOrder",
@@ -1966,7 +1966,6 @@
       "scopes": [
         "standing-order:create"
       ],
-      "group": "payments",
       "signed": true,
       "confirm": true,
       "pathParams": [
@@ -1991,7 +1990,8 @@
           "spendingCategory"
         ]
       },
-      "response": "json"
+      "response": "json",
+      "category": "payments"
     },
     {
       "operationId": "listNextPaymentDates",
@@ -2002,7 +2002,6 @@
       "scopes": [
         "standing-order:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -2019,7 +2018,8 @@
         }
       ],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getPaymentOrder",
@@ -2030,7 +2030,6 @@
       "scopes": [
         "pay-local:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -2038,7 +2037,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getPaymentOrderPayments",
@@ -2049,7 +2049,6 @@
       "scopes": [
         "pay-local:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [
@@ -2057,7 +2056,8 @@
       ],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     },
     {
       "operationId": "getSettleUpProfile",
@@ -2068,13 +2068,13 @@
       "scopes": [
         "settle-up:read"
       ],
-      "group": "view",
       "signed": false,
       "confirm": false,
       "pathParams": [],
       "queryParams": [],
       "body": null,
-      "response": "json"
+      "response": "json",
+      "category": "view"
     }
   ]
 }

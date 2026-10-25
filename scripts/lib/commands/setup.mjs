@@ -22,9 +22,9 @@ export const setupCommands = {
       return {
         created: target,
         next: [
-          'Open that file and read the comments: they explain every setting and the values it accepts.',
-          'Create a personal access token at https://developer.starlingbank.com (Personal Access) and export it, e.g. export STARLING_ACCESS_TOKEN=... (never paste it into the chat).',
-          'Run `doctor` to check everything is set up correctly.',
+          'Edit only the settings you need; references/configuration.md explains each field.',
+          'Supply the required account token locally as STARLING_ACCESS_TOKEN or auth.account.tokenFile. It is used for everything except payment initiation; never paste it into chat.',
+          'Optional: supply STARLING_PAYMENT_ACCESS_TOKEN or auth.payments.tokenFile only if you want to initiate payments. Run `doctor` to check setup.',
         ],
       };
     },

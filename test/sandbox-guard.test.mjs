@@ -7,6 +7,9 @@ const config = { environment: 'sandbox', auth: { tokenFile: '/private/sandbox/ac
 
 test('sandbox checks reject live config, host overrides and shared credential files', () => {
   assert.doesNotThrow(() => assertSandboxConfig(config, {}, '/private/sandbox/access-token'));
+  const nested = { ...config, auth: { account: config.auth, payments: { tokenFile: '/private/sandbox/access-token' } } };
+  assert.doesNotThrow(() => assertSandboxConfig(nested, {}, '/private/sandbox/access-token'));
+  assert.throws(() => assertSandboxConfig({ ...nested, auth: { ...nested.auth, payments: { tokenFile: '/private/live/token' } } }, {}, '/private/sandbox/access-token'), /isolated token file/);
   assert.throws(() => assertSandboxConfig({ ...config, environment: 'live' }, {}, '/private/sandbox/access-token'), /sandbox API host/);
   assert.throws(() => assertSandboxConfig(config, { STARLING_BANKING_TEST_BASE_URL: 'http://127.0.0.1:1234' }, '/private/sandbox/access-token'), /sandbox API host/);
   assert.throws(() => assertSandboxConfig({ ...config, auth: { tokenFile: '/private/live/token' } }, {}, '/private/sandbox/access-token'), /isolated token file/);

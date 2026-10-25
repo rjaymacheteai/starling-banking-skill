@@ -16,9 +16,7 @@ describe('read-only use', () => {
     const r = await w.run('accounts', 'list');
     assert.equal(r.exitCode, 0);
     assert.equal(r.data.accounts[0].name, 'Personal');
-    const p = await w.run('permissions');
-    assert.equal(p.data.configFound, false);
-    assert.deepEqual(p.data.groups.filter((g) => g.enabled).map((g) => g.name), ['view']);
+
   });
 
   test('accounts balance shows formatted money', async () => {
@@ -130,7 +128,7 @@ describe('several accounts', () => {
   test('uses the sole PRIMARY account, or asks when it cannot tell', async () => {
     w = await setup({ mock: { accounts: two } });
     assert.equal((await w.run('accounts', 'balance')).data.account.name, 'Personal');
-    w.writeConfig({ permissions: ['view'] });
+    w.writeConfig({ });
     const named = await w.run('accounts', 'balance', '--account', 'holiday pot');
     assert.equal(named.data.account.name, 'Holiday pot');
     assert.equal((await w.run('accounts', 'balance', '--account', 'nope')).error.code, 'ACCOUNT_NOT_FOUND');
@@ -141,66 +139,43 @@ describe('several accounts', () => {
     const r = await w.run('accounts', 'balance');
     assert.equal(r.error.code, 'AMBIGUOUS_ACCOUNT');
     assert.equal(r.error.details.accounts.length, 2);
-    w.writeConfig({ permissions: ['view'], defaultAccountUid: IDS.savingsAccount });
+    w.writeConfig({ defaultAccountUid: IDS.savingsAccount });
     assert.equal((await w.run('accounts', 'balance')).data.account.name, 'Holiday pot');
   });
 });
 
-describe('permission groups', () => {
-  test('a switched-off group fails fast with a hint for the user, and sends nothing', async () => {
-    w = await setup({ permissions: ['view'] });
-    for (const argv of [
-      ['pay', '--payee', 'John Smith', '--amount', '5', '--reference', 'x'],
-      ['payees', 'add', '--name', 'New Person', '--sort-code', '112233', '--account-number', '12345678'],
-      ['cards', 'lock'],
-      ['transactions', 'note', 'abc', 'hello'],
-      ['goals', 'add', IDS.goal, '--amount', '5'],
-      ['mandates', 'cancel', IDS.mandate],
-    ]) {
-      w.mock.reset();
-      const r = await w.run(...argv);
-      assert.equal(r.error?.code, 'PERMISSION_DISABLED', argv.join(' '));
-      assert.match(r.error.hint, /do not edit the config yourself/);
-      assert.equal(w.mock.requests.length, 0, `${argv.join(' ')} must not call Starling at all`);
-    }
+describe('Starling scopes and operation discovery', () => {
+  test('bank scopes deny an immediate write through friendly and generic commands', async () => {
+    w = await setup({ mock: { scopes: ['account:read', 'card:read'] } });
+    assert.equal((await w.run('cards', 'lock')).error.code, 'FORBIDDEN');
+    assert.equal((await w.run('call', 'enableCard', '--param', `cardUid=${IDS.card}`, '--body', '{"enabled":false}')).error.code, 'FORBIDDEN');
+    assert.equal(w.mock.state.cards[0].enabled, true);
+    assert.ok(w.mock.writes().every((q) => q.status === 403));
   });
 
-  test('the generic call command enforces the same groups, and reads still work', async () => {
-    w = await setup({ permissions: ['view'] });
-    const del = await w.run('call', 'deletePayee', '--param', `payeeUid=${IDS.john}`);
-    assert.equal(del.error.code, 'PERMISSION_DISABLED');
+  test('generic sensitive writes still require a preview before bank scope denial', async () => {
+    w = await setup({ mock: { scopes: ['account:read', 'payee:read'] } });
+    const preview = await w.run('call', 'deletePayee', '--param', `payeeUid=${IDS.john}`);
+    assert.equal(preview.json.status, 'needs_confirmation');
     assert.equal(w.mock.writes().length, 0);
-    assert.equal((await w.run('call', 'getPayees')).exitCode, 0);
+    assert.equal((await w.run('confirm', preview.json.confirmCode)).error.code, 'FORBIDDEN');
+    assert.ok(w.mock.state.payees.some((p) => p.payeeUid === IDS.john));
   });
 
-  test('"organise" actions run straight away; "card-controls" too', async () => {
-    w = await setup({ permissions: ['view', 'organise', 'card-controls'] });
-    const note = await w.run('transactions', 'note', '88888888-8888-4888-8888-000000000001', 'weekly', 'shop');
-    assert.equal(note.exitCode, 0, note.stdout);
-    assert.equal(w.mock.state.notes.get('88888888-8888-4888-8888-000000000001'), 'weekly shop');
-    const lock = await w.run('cards', 'lock');
-    assert.equal(lock.exitCode, 0, lock.stdout);
-    assert.deepEqual(w.mock.callsTo('enableCard')[0].body, { enabled: false });
+  test('scoped immediate writes work without local capability configuration', async () => {
+    w = await setup();
+    assert.equal((await w.run('transactions', 'note', '88888888-8888-4888-8888-000000000001', 'weekly shop')).exitCode, 0);
+    assert.equal((await w.run('cards', 'lock')).exitCode, 0);
     assert.equal(w.mock.state.cards[0].enabled, false);
-    assert.equal((await w.run('cards', 'set', 'gambling', 'maybe')).error.code, 'USAGE');
   });
 
-  test('"permissions" lists every group with what it allows', async () => {
-    w = await setup({ permissions: ['view', 'payees'] });
-    const r = await w.run('permissions');
-    assert.equal(r.data.groups.length, 7);
-    assert.equal(r.data.groups.find((g) => g.name === 'payees').enabled, true);
-    assert.equal(r.data.groups.find((g) => g.name === 'payments').enabled, false);
-    assert.match(r.data.howToChange, /"view" is always on/);
-  });
-
-  test('ops search shows which operations are switched off and which need confirmation', async () => {
-    w = await setup({ permissions: ['view'] });
+  test('ops categories describe operations and confirmation, never enabled/disabled groups', async () => {
+    w = await setup();
     const r = await w.run('ops', 'payee');
-    assert.ok(r.data.operations.some((o) => /createPayee .*switched off.*confirm/.test(o)));
-    const g = await w.run('ops', '--group', 'payments');
-    assert.equal(g.data.count, 4);
-    assert.equal((await w.run('ops', '--group', 'nonsense')).error.code, 'USAGE');
+    assert.ok(r.data.operations.some((o) => /createPayee .*confirm/.test(o)));
+    assert.ok(r.data.operations.every((o) => !/switched off/.test(o)));
+    assert.equal((await w.run('ops', '--category', 'payments')).data.count, 4);
+    assert.equal((await w.run('ops', '--category', 'nonsense')).error.code, 'USAGE');
   });
 
   test('invalid config is reported plainly, not with a stack trace', async () => {
@@ -208,7 +183,7 @@ describe('permission groups', () => {
     writeFileSync(w.configPath, '{ "permissions": ["view", "everything"], }');
     const r = await w.run('accounts', 'list');
     assert.equal(r.error.code, 'CONFIG_INVALID');
-    assert.match(r.error.message, /Unknown permission "everything"/);
+    assert.match(r.error.message, /removed in 0.2.0/);
     writeFileSync(w.configPath, '{ not json');
     assert.equal((await w.run('accounts', 'list')).error.code, 'CONFIG_INVALID');
   });
@@ -220,7 +195,7 @@ describe('errors and secrets', () => {
     delete w.env.STARLING_ACCESS_TOKEN;
     const r = await w.run('accounts', 'list');
     assert.equal(r.error.code, 'NO_TOKEN');
-    assert.match(r.error.hint, /do not paste it into the chat/);
+    assert.match(r.error.hint, /Never paste tokens into chat/);
     assert.equal(w.mock.requests.length, 0);
   });
 
@@ -244,7 +219,7 @@ describe('errors and secrets', () => {
     const tokenFile = path.join(w.home, 'token.txt');
     writeFileSync(tokenFile, TOKEN + '\n', { mode: 0o600 });
     delete w.env.STARLING_ACCESS_TOKEN;
-    w.writeConfig({ permissions: ['view'], auth: { tokenFile } });
+    w.writeConfig({ auth: { tokenFile } });
     assert.equal((await w.run('accounts', 'list')).exitCode, 0);
   });
 

@@ -22,7 +22,7 @@ test('direct payee and nested payment consents are recognised without claiming c
 });
 
 test('HTTP 200 with consent leaves the payee unchanged, reports app approval and never resends on confirm', async () => {
-  w = await setup({ permissions: ['view', 'payees'], mock: { payeeUpdateRequiresApproval: true } });
+  w = await setup({ mock: { payeeUpdateRequiresApproval: true } });
   const preview = await w.run('payees', 'update', IDS.jane, '--first-name', 'Different');
   const result = await w.run('confirm', preview.json.confirmCode);
   assert.equal(result.exitCode, 0, result.stdout);
@@ -36,7 +36,7 @@ test('HTTP 200 with consent leaves the payee unchanged, reports app approval and
 });
 
 test('previously saved consent responses are classified correctly without a new bank write', async () => {
-  w = await setup({ permissions: ['view', 'payees'] });
+  w = await setup({ });
   const preview = await w.run('payees', 'update', IDS.jane, '--first-name', 'Different');
   const plans = new PlanStore(w.env);
   const plan = plans.load(preview.json.confirmCode);

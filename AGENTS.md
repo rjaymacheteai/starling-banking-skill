@@ -9,7 +9,7 @@ for the runtime flow and documentation map.
 
 - Keep the CLI dependency-free and compatible with Node.js 18+.
 - Route banking operations through the bundled CLI and shared engine. Preserve
-  permission checks, payment limits/allowlists, preview integrity, fresh approval,
+  Starling token-scope enforcement, payment limits/allowlists, preview integrity, fresh approval,
   replay protection, redaction and honest unresolved statuses. Generic `call` must
   not bypass these controls. Read SKILL.md before changing banking behaviour.
 - Keep credentials/config/state outside the installed skill. Never read out,
@@ -39,7 +39,7 @@ Build release assets with `npm run pack:skill` (`tools/package-skill.mjs`). It u
 - `config.json.example`
 - `scripts/`
 - `references/`
-- `data/`
+- `endpoints/`
 - `LICENSE`
 - `THIRD_PARTY_NOTICES.md`
 
@@ -62,7 +62,7 @@ eval copy in `tools/eval/lib/agent.mjs`, along with this list.
 4. List and inspect the archive. Require exactly the allowlisted paths beneath
    `starling-banking/`, with no private data, symlinks or unexpected files. Extract
    to a temporary directory and run the extracted CLI's `--version`, `help` and
-   `permissions` with an empty runtime directory and no banking credentials.
+   `ops` with an empty runtime directory and no banking credentials.
    These smoke checks must not contact a real bank. Verify the SHA-256 checksum.
 5. Create an annotated `v<VERSION>` tag at the exact packaged commit. Push the
    commit and tag; verify required CI passes. Create the GitHub release for that
